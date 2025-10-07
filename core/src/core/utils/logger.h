@@ -25,15 +25,16 @@ namespace core
         static void shutdown();
 
         static void setLogLevel(spdlog::level::level_enum level);
-        static void setLogLevel(std::string_view name, spdlog::level::level_enum level);
+        static void setLogLevel(const std::string_view name, spdlog::level::level_enum level);
 
+        // Returns a shared_ptr to a logger; if it does not exist it will be created.
         static std::shared_ptr<spdlog::logger> get(const std::string& name);
 
       private:
         static std::unordered_map<std::string, std::shared_ptr<spdlog::logger>> s_loggers;
     };
 
-} // namespace Core
+} // namespace core
 
 // Define the logging macros for different levels
 #define TB_CORE_TRACE(...) ::core::Logger::get("Core")->trace(__VA_ARGS__)

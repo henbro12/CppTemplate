@@ -9,8 +9,8 @@
  * @author Henrico Brom <henricobrom@gmail.com>
  */
 
-#include "core_inc.h"
 #include "core/template/template.h"
+#include "core_inc.h"
 
 int main(int argc, char** argv)
 {
@@ -19,9 +19,9 @@ int main(int argc, char** argv)
 
     core::Logger::init();
     core::Logger::setLogLevel(spdlog::level::trace);
-    
+
     TB_APP_INFO("Template Application initialized successfully.");
-    
+
     core::boot();
 
     core::Logger::shutdown();

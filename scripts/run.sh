@@ -22,10 +22,12 @@ fi
 EXE_PATH="$BUILD_DIR/$EXE_NAME"
 if [[ -f "$EXE_PATH" ]]; then
     echo "[INFO] Running $EXE_PATH"
+    echo "----------------------------------------"
     "$EXE_PATH"
 else
     echo "[ERROR] Executable not found: $EXE_PATH"
     exit 1
 fi
 
+echo "----------------------------------------"
 echo "[SUCCESS] Execution complete."

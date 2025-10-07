@@ -9,6 +9,7 @@
  * @author Henrico Brom <henricobrom@gmail.com>
  */
 #include "pch.h"
+
 #include "logger.h"
 
 #include <spdlog/sinks/stdout_color_sinks.h>
@@ -45,9 +46,10 @@ namespace core
 
         for (auto& [name, logger] : s_loggers)
         {
-            logger->flush();
+            if (logger) logger->flush();
             spdlog::drop(name);
         }
+        s_loggers.clear();
         spdlog::shutdown();
     }
 
@@ -55,16 +57,16 @@ namespace core
     {
         for (auto& [name, logger] : s_loggers)
         {
-            logger->set_level(level);
+            if (logger) logger->set_level(level);
         }
 
         TB_CORE_INFO("Log level set to {}", spdlog::level::to_string_view(level));
     }
 
-    void Logger::setLogLevel(std::string_view name, spdlog::level::level_enum level)
+    void Logger::setLogLevel(const std::string_view name, spdlog::level::level_enum level)
     {
         auto it = s_loggers.find(std::string(name));
-        if (it != s_loggers.end())
+        if (it != s_loggers.end() && it->second)
         {
             it->second->set_level(level);
             it->second->info("Log level set to {}", spdlog::level::to_string_view(level));
@@ -78,10 +80,14 @@ namespace core
     std::shared_ptr<spdlog::logger> Logger::get(const std::string& name)
     {
         auto it = s_loggers.find(name);
-        if (it != s_loggers.end()) return it->second;
+        if (it != s_loggers.end() && it->second) return it->second;
 
-        TB_CORE_ERROR("Logger '{}' not found", name);
-        return nullptr;
+        // Create a new logger on demand to avoid returning nullptr
+        auto logger = spdlog::stdout_color_mt(name);
+        logger->set_level(spdlog::level::info);
+        logger->set_pattern("[%T] [%^%l%$] %n: %v");
+        s_loggers[name] = logger;
+        return logger;
     }
 
 } // namespace core

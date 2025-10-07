@@ -10,14 +10,12 @@
  */
 
 #include "core/template/template.h"
-#include "core/utils/logger.h"
 
 #include <iostream>
 
+#include "core/utils/logger.h"
+
 namespace core
 {
-    void boot()
-    {
-        TB_CORE_INFO("Boot sequence initialized.");
-    }
+    void boot() { TB_CORE_INFO("Boot sequence initialized."); }
 } // namespace core
