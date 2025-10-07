@@ -1,0 +1,66 @@
+# .clang-format
+
+# Use LLVM style as a base
+BasedOnStyle: LLVM
+Language: Cpp
+
+# Formatting preferences
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 140
+AllowShortFunctionsOnASingleLine: All
+BreakBeforeBraces: Allman
+BraceWrapping:
+  AfterClass: true
+  AfterControlStatement: true
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterStruct: true
+  BeforeCatch: true
+  BeforeElse: true
+  IndentBraces: false
+
+# Include sorting
+IncludeBlocks: Regroup
+
+IncludeCategories:
+  - Regex:           "^\"pch\\.h\""
+    Priority:        -1
+    CaseSensitive:   false
+  - Regex:           "^<.*>"
+    Priority:        2
+  - Regex:           "^\".*\""
+    Priority:        3
+
+SortIncludes: true
+
+# Constructor initialization style
+ConstructorInitializerAllOnOneLineOrOnePerLine: false
+
+# Namespace handling
+NamespaceIndentation: All
+
+# Align pointers and references
+PointerAlignment: Left
+ReferenceAlignment: Left
+
+# Misc
+AlwaysBreakTemplateDeclarations: Yes
+AllowShortIfStatementsOnASingleLine: true
+AllowShortLambdasOnASingleLine: All
+EmptyLineBeforeAccessModifier: Always
+SpaceBeforeParens: ControlStatements
+SpacesInParentheses: false
+SpacesInAngles: false
+Cpp11BracedListStyle: true
+ReflowComments: true
+SortUsingDeclarations: true
+AllowShortEnumsOnASingleLine: true
+AllowShortCaseLabelsOnASingleLine: true
+
+# Custom macros to treat as braces or statements
+Macros:
+  - "DEBUG_LOG"
+  - "ASSERT"

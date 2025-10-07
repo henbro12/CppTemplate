@@ -1,0 +1,62 @@
+# C++ object and build files
+*.d
+*.slo
+*.lo
+*.o
+*.obj
+*.gch
+*.pch
+*.mod
+*.smod
+
+# Static and dynamic libs
+*.so
+*.dylib
+*.dll
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# CMake build directories
+/build/
+/CMakeFiles/
+/CMakeCache.txt
+/cmake_install.cmake
+/Makefile
+/install_manifest.txt
+/compile_commands.json
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# Visual Studio
+.vs/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.swp
+
+# Generated files
+*.generated.*
+
+# vcpkg artifacts (optional, depends on usage)
+.vcpkg_installed/
+vcpkg_installed/
+vcpkg/buildtrees/
+vcpkg/packages/
+vcpkg/downloads/
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# External dependencies
+/external/
