@@ -1,30 +1,62 @@
-# .clang-format
-
-# Use LLVM style as a base
+# Base
 BasedOnStyle: LLVM
 Language: Cpp
 
-# Formatting preferences
+# Line width & tabs
+ColumnLimit: 140
 IndentWidth: 4
 TabWidth: 4
 UseTab: Never
-ColumnLimit: 140
-AllowShortFunctionsOnASingleLine: All
-BreakBeforeBraces: Allman
+
+# Braces / wrapping
+BreakBeforeBraces: Stroustrup
 BraceWrapping:
-  AfterClass: true
-  AfterControlStatement: true
-  AfterEnum: true
-  AfterFunction: true
-  AfterNamespace: true
-  AfterStruct: true
+  AfterCaseLabel: false
+  AfterClass: false
+  AfterControlStatement: false
+  AfterEnum: false
+  AfterFunction: false
+  AfterNamespace: false
+  AfterStruct: false
+  AfterUnion: false
+  AfterExternBlock: false
   BeforeCatch: true
   BeforeElse: true
+  BeforeLambdaBody: false
   IndentBraces: false
 
-# Include sorting
-IncludeBlocks: Regroup
+# Short forms
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLambdasOnASingleLine: Inline
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortEnumsOnASingleLine: true
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
 
+# Namespaces / indentation
+NamespaceIndentation: None
+EmptyLineBeforeAccessModifier: Always
+
+# Alignment / spacing
+PointerAlignment: Left
+ReferenceAlignment: Left
+AlignAfterOpenBracket: Align
+AlignOperands: true
+SpaceBeforeParens: ControlStatements
+SpacesInParentheses: false
+SpacesInAngles: false
+Cpp11BracedListStyle: true
+ReflowComments: true
+SortUsingDeclarations: true
+KeepEmptyLinesAtTheStartOfBlocks: false
+MaxEmptyLinesToKeep: 2
+FixNamespaceComments: true
+SpaceBeforeAssignmentOperators: true
+SpaceInEmptyParentheses: false
+
+# Includes
+IncludeBlocks: Regroup
+SortIncludes: true
 IncludeCategories:
   - Regex:           "^\"pch\\.h\""
     Priority:        -1
@@ -34,33 +66,17 @@ IncludeCategories:
   - Regex:           "^\".*\""
     Priority:        3
 
-SortIncludes: true
+# Extra, generally helpful knobs
+ConstructorInitializerIndentWidth: 4
+ContinuationIndentWidth: 4
+IndentWrappedFunctionNames: true
+BinPackArguments: true
+BinPackParameters: true
+BreakConstructorInitializers: AfterColon
+SpacesBeforeTrailingComments: 1
 
-# Constructor initialization style
-ConstructorInitializerAllOnOneLineOrOnePerLine: false
-
-# Namespace handling
-NamespaceIndentation: All
-
-# Align pointers and references
-PointerAlignment: Left
-ReferenceAlignment: Left
-
-# Misc
-AlwaysBreakTemplateDeclarations: Yes
-AllowShortIfStatementsOnASingleLine: true
-AllowShortLambdasOnASingleLine: All
-EmptyLineBeforeAccessModifier: Always
-SpaceBeforeParens: ControlStatements
-SpacesInParentheses: false
-SpacesInAngles: false
-Cpp11BracedListStyle: true
-ReflowComments: true
-SortUsingDeclarations: true
-AllowShortEnumsOnASingleLine: true
-AllowShortCaseLabelsOnASingleLine: true
-
-# Custom macros to treat as braces or statements
-Macros:
-  - "DEBUG_LOG"
-  - "ASSERT"
+# Treat certain macros as statements to avoid weird wrapping
+# (available in newer clang-format versions)
+StatementMacros:
+  - DEBUG_LOG
+  - ASSERT

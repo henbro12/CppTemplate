@@ -16,8 +16,7 @@
 #ifdef TEMPLATE_ENABLE_ASSERTS
 #define TEMPLATE_ASSERT(x, log_macro, ...)                                                                                                 \
     {                                                                                                                                      \
-        if (!(x))                                                                                                                          \
-        {                                                                                                                                  \
+        if (!(x)) {                                                                                                                        \
             log_macro("Assertion Failed: {0}", __VA_ARGS__);                                                                               \
             __debugbreak();                                                                                                                \
         }                                                                                                                                  \
@@ -25,8 +24,7 @@
 
 #define TEMPLATE_VERIFY(x, log_macro, ...)                                                                                                 \
     {                                                                                                                                      \
-        if (!(x))                                                                                                                          \
-        {                                                                                                                                  \
+        if (!(x)) {                                                                                                                        \
             log_macro("Verification Failed: {0}", __VA_ARGS__);                                                                            \
             __debugbreak();                                                                                                                \
         }                                                                                                                                  \

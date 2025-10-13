@@ -14,32 +14,30 @@
 #include <chrono>
 #include <string>
 
-namespace core::utils
-{
-    class Profiler
-    {
-      public:
-        static void start(std::string_view name);
-        static void end(std::string_view name);
+namespace core::utils {
 
-        // Convenience: returns elapsed microseconds without logging
-        static long long elapsed_us(std::string_view name);
-    };
+class Profiler {
+  public:
+    static void start(std::string_view name);
+    static void end(std::string_view name);
 
-    // RAII helper
-    class ScopedTimer
-    {
-      public:
-        explicit ScopedTimer(std::string_view name);
-        ~ScopedTimer();
+    // Convenience: returns elapsed microseconds without logging
+    static long long elapsed_us(std::string_view name);
+};
 
-        ScopedTimer(const ScopedTimer&) = delete;
-        ScopedTimer& operator=(const ScopedTimer&) = delete;
+// RAII helper
+class ScopedTimer {
+  public:
+    explicit ScopedTimer(std::string_view name);
+    ~ScopedTimer();
 
-      private:
-        std::string m_name;
-        std::chrono::steady_clock::time_point m_start;
-    };
+    ScopedTimer(const ScopedTimer&) = delete;
+    ScopedTimer& operator=(const ScopedTimer&) = delete;
+
+  private:
+    std::string m_name;
+    std::chrono::steady_clock::time_point m_start;
+};
 
 } // namespace core::utils
 

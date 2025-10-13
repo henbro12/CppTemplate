@@ -16,78 +16,76 @@
 
 #include "utils.h"
 
-namespace core
+namespace core {
+
+constexpr const char* ANSI_WHITE = "\033[37m";
+constexpr const char* ANSI_GREY = "\033[90m";
+constexpr const char* ANSI_RESET = "\033[0m";
+
+std::unordered_map<std::string, std::shared_ptr<spdlog::logger>> Logger::s_loggers;
+
+void Logger::init()
 {
-    constexpr const char* ANSI_WHITE = "\033[37m";
-    constexpr const char* ANSI_GREY = "\033[90m";
-    constexpr const char* ANSI_RESET = "\033[0m";
-
-    std::unordered_map<std::string, std::shared_ptr<spdlog::logger>> Logger::s_loggers;
-
-    void Logger::init()
-    {
-        auto create = [](const std::string& name, const char* color)
-        {
-            auto logger = spdlog::stdout_color_mt(name);
-            logger->set_level(spdlog::level::trace);
-            logger->set_pattern(fmt::format("[%T] [%^%l%$] {}%n: %v{}", color, ANSI_RESET));
-            s_loggers[name] = logger;
-        };
-
-        create("Core", ANSI_GREY);
-        create("App", ANSI_GREY);
-
-        TB_CORE_INFO("Loggers initialized.");
-    }
-
-    void Logger::shutdown()
-    {
-        TB_CORE_INFO("Shutting down logger.");
-
-        for (auto& [name, logger] : s_loggers)
-        {
-            if (logger) logger->flush();
-            spdlog::drop(name);
-        }
-        s_loggers.clear();
-        spdlog::shutdown();
-    }
-
-    void Logger::setLogLevel(spdlog::level::level_enum level)
-    {
-        for (auto& [name, logger] : s_loggers)
-        {
-            if (logger) logger->set_level(level);
-        }
-
-        TB_CORE_INFO("Log level set to {}", spdlog::level::to_string_view(level));
-    }
-
-    void Logger::setLogLevel(const std::string_view name, spdlog::level::level_enum level)
-    {
-        auto it = s_loggers.find(std::string(name));
-        if (it != s_loggers.end() && it->second)
-        {
-            it->second->set_level(level);
-            it->second->info("Log level set to {}", spdlog::level::to_string_view(level));
-        }
-        else
-        {
-            TB_CORE_ERROR("Logger '{}' not found", name);
-        }
-    }
-
-    std::shared_ptr<spdlog::logger> Logger::get(const std::string& name)
-    {
-        auto it = s_loggers.find(name);
-        if (it != s_loggers.end() && it->second) return it->second;
-
-        // Create a new logger on demand to avoid returning nullptr
+    auto create = [](const std::string& name, const char* color) {
         auto logger = spdlog::stdout_color_mt(name);
-        logger->set_level(spdlog::level::info);
-        logger->set_pattern("[%T] [%^%l%$] %n: %v");
+        logger->set_level(spdlog::level::trace);
+        logger->set_pattern(fmt::format("[%T] [%^%l%$] {}%n: %v{}", color, ANSI_RESET));
         s_loggers[name] = logger;
-        return logger;
+    };
+
+    create("Core", ANSI_GREY);
+    create("App", ANSI_GREY);
+
+    TB_CORE_INFO("Loggers initialized.");
+}
+
+void Logger::shutdown()
+{
+    TB_CORE_INFO("Shutting down logger.");
+
+    for (auto& [name, logger] : s_loggers) {
+        if (logger)
+            logger->flush();
+        spdlog::drop(name);
     }
+    s_loggers.clear();
+    spdlog::shutdown();
+}
+
+void Logger::setLogLevel(spdlog::level::level_enum level)
+{
+    for (auto& [name, logger] : s_loggers) {
+        if (logger)
+            logger->set_level(level);
+    }
+
+    TB_CORE_INFO("Log level set to {}", spdlog::level::to_string_view(level));
+}
+
+void Logger::setLogLevel(const std::string_view name, spdlog::level::level_enum level)
+{
+    auto it = s_loggers.find(std::string(name));
+    if (it != s_loggers.end() && it->second) {
+        it->second->set_level(level);
+        it->second->info("Log level set to {}", spdlog::level::to_string_view(level));
+    }
+    else {
+        TB_CORE_ERROR("Logger '{}' not found", name);
+    }
+}
+
+std::shared_ptr<spdlog::logger> Logger::get(const std::string& name)
+{
+    auto it = s_loggers.find(name);
+    if (it != s_loggers.end() && it->second)
+        return it->second;
+
+    // Create a new logger on demand to avoid returning nullptr
+    auto logger = spdlog::stdout_color_mt(name);
+    logger->set_level(spdlog::level::info);
+    logger->set_pattern("[%T] [%^%l%$] %n: %v");
+    s_loggers[name] = logger;
+    return logger;
+}
 
 } // namespace core

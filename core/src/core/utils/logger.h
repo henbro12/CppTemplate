@@ -16,23 +16,22 @@
 #include <string>
 #include <unordered_map>
 
-namespace core
-{
-    class Logger
-    {
-      public:
-        static void init();
-        static void shutdown();
+namespace core {
 
-        static void setLogLevel(spdlog::level::level_enum level);
-        static void setLogLevel(const std::string_view name, spdlog::level::level_enum level);
+class Logger {
+  public:
+    static void init();
+    static void shutdown();
 
-        // Returns a shared_ptr to a logger; if it does not exist it will be created.
-        static std::shared_ptr<spdlog::logger> get(const std::string& name);
+    static void setLogLevel(spdlog::level::level_enum level);
+    static void setLogLevel(const std::string_view name, spdlog::level::level_enum level);
 
-      private:
-        static std::unordered_map<std::string, std::shared_ptr<spdlog::logger>> s_loggers;
-    };
+    // Returns a shared_ptr to a logger; if it does not exist it will be created.
+    static std::shared_ptr<spdlog::logger> get(const std::string& name);
+
+  private:
+    static std::unordered_map<std::string, std::shared_ptr<spdlog::logger>> s_loggers;
+};
 
 } // namespace core
 

@@ -15,7 +15,11 @@
 
 #include "core/utils/logger.h"
 
-namespace core
+namespace core {
+
+void boot()
 {
-    void boot() { TB_CORE_INFO("Boot sequence initialized."); }
+    TB_CORE_INFO("Boot sequence initialized.");
+}
+
 } // namespace core

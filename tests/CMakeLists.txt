@@ -4,12 +4,12 @@
 find_package(Catch2 REQUIRED)
 
 add_executable(unit-tests
-    test_logger.cpp
+  test_logger.cpp
 )
 
 target_link_libraries(unit-tests PRIVATE
-    Catch2::Catch2WithMain
-    template::core
+  Catch2::Catch2WithMain
+  template::core
 )
 
 # Automatically register with CTest

@@ -2,15 +2,15 @@
 # @copyright (C) 2025 Henbro12
 
 add_executable(CppTemplateApp
-    src/main.cpp
+  src/main.cpp
 )
 
 target_include_directories(CppTemplateApp PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/
 )
 
 target_link_libraries(CppTemplateApp PRIVATE
-    template::core
+  template::core
 )
 
 enable_common_warnings(CppTemplateApp)

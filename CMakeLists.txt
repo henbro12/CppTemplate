@@ -4,9 +4,9 @@
 cmake_minimum_required(VERSION 3.25)
 
 # Project configuration
-project(CppTemplate 
-    VERSION 0.1 
-    LANGUAGES CXX
+project(CppTemplate
+  VERSION 0.1
+  LANGUAGES CXX
 )
 
 # Set C++ standard
@@ -25,11 +25,28 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Enable warnings and strictness
 include(CheckCXXCompilerFlag)
 function(enable_common_warnings target)
-    if (MSVC)
-        target_compile_options(${target} PRIVATE /W4 /permissive-)
-    else()
-        target_compile_options(${target} PRIVATE -Wall -Wextra -Wpedantic -Werror)
-    endif()
+  if (MSVC)
+    target_compile_options(${target} PRIVATE /W4 /permissive-)
+  else()
+    target_compile_options(${target} PRIVATE
+      -Wall
+      -Wextra
+      -pedantic
+      -Wcast-align
+      -Wformat=2
+      -Wmisleading-indentation
+      -Wmissing-include-dirs
+      -Wnull-dereference
+      -Wswitch-enum
+      -Wunused
+      -Wunused-variable
+      -Wunused-parameter
+      -Wvla
+      # Warnings that are not allowed in C compilation units
+      $<$<COMPILE_LANGUAGE:CXX>:-Wnon-virtual-dtor>
+      $<$<COMPILE_LANGUAGE:CXX>:-Woverloaded-virtual>
+    )
+  endif()
 endfunction()
 
 # Add subdirectories
@@ -39,6 +56,6 @@ add_subdirectory(app)
 # Add testing support
 option(ENABLE_TESTING "Enable unit test targets" ON)
 if(ENABLE_TESTING)
-    enable_testing()
-    add_subdirectory(tests)
+  enable_testing()
+  add_subdirectory(tests)
 endif()

@@ -11,7 +11,8 @@
 
 #pragma once
 
-namespace core
-{
-    void boot();
+namespace core {
+
+void boot();
+
 } // namespace core

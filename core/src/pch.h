@@ -11,22 +11,22 @@
 
 #pragma once
 
-#include <iostream>
-#include <memory>
-#include <utility>
 #include <algorithm>
 #include <functional>
-#include <variant>
+#include <memory>
 #include <ranges>
+#include <utility>
+#include <variant>
 
-#include <string>
-#include <vector>
 #include <array>
 #include <map>
+#include <string>
+#include <typeindex>
 #include <unordered_map>
 #include <unordered_set>
-#include <typeindex>
+#include <vector>
 
-#include <fstream>
-#include <sstream>
 #include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <sstream>
