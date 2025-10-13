@@ -31,6 +31,7 @@ AllowShortIfStatementsOnASingleLine: false
 AllowShortLambdasOnASingleLine: Inline
 AllowShortCaseLabelsOnASingleLine: true
 AllowShortEnumsOnASingleLine: true
+AlwaysBreakTemplateDeclarations: Yes
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
 
 # Namespaces / indentation

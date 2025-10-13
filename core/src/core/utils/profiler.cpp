@@ -16,47 +16,49 @@
 
 namespace core::utils {
 
-using clock = std::chrono::steady_clock;
+std::unordered_map<std::string, Profiler::clock::time_point> Profiler::s_starts{};
+std::mutex Profiler::s_mutex{};
 
-static std::unordered_map<std::string, clock::time_point> s_starts;
-static std::mutex s_mutex;
-
-void Profiler::start(std::string_view name)
+void Profiler::startTimer(std::string_view name)
 {
-    std::lock_guard lock(s_mutex);
-    s_starts[std::string(name)] = clock::now();
+    std::lock_guard lk(s_mutex);
+    s_starts[std::string{name}] = clock::now();
 }
 
-void Profiler::end(std::string_view name)
+void Profiler::endTimer(std::string_view name)
 {
-    std::lock_guard lock(s_mutex);
-    auto it = s_starts.find(std::string(name));
-    if (it == s_starts.end()) {
-        TB_CORE_WARN("Profiler end called for '{}' without a matching start", name);
-        return;
+    const auto key = std::string{name};
+    Profiler::clock::time_point start{};
+    {
+        std::lock_guard lk(s_mutex);
+        auto it = s_starts.find(key);
+        if (it == s_starts.end()) {
+            TB_CORE_WARN("Profiler end called for '{}' without a matching start", name);
+            return;
+        }
+        start = it->second;
+        s_starts.erase(it);
     }
-
-    auto dur = std::chrono::duration_cast<std::chrono::microseconds>(clock::now() - it->second).count();
-    s_starts.erase(it);
-
-    TB_CORE_TRACE("Profiler '{}' took {} us", name, dur);
+    const auto us = std::chrono::duration_cast<std::chrono::microseconds>(clock::now() - start).count();
+    TB_CORE_TRACE("Profiler '{}' took {} us", name, us);
 }
 
 long long Profiler::elapsed_us(std::string_view name)
 {
-    std::lock_guard lock(s_mutex);
-    auto it = s_starts.find(std::string(name));
+    std::lock_guard lk(s_mutex);
+    auto it = s_starts.find(std::string{name});
     if (it == s_starts.end())
-        return -1;
+        return 0;
     return std::chrono::duration_cast<std::chrono::microseconds>(clock::now() - it->second).count();
 }
 
-ScopedTimer::ScopedTimer(std::string_view name) : m_name(name), m_start(clock::now()) {}
+
+ScopedTimer::ScopedTimer(std::string_view name) : m_name{name}, m_start{std::chrono::steady_clock::now()} {}
 
 ScopedTimer::~ScopedTimer()
 {
-    auto dur = std::chrono::duration_cast<std::chrono::microseconds>(clock::now() - m_start).count();
-    TB_CORE_TRACE("ScopedTimer '{}' took {} us", m_name, dur);
+    const auto us = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - m_start).count();
+    TB_CORE_TRACE("Profiler '{}' took {} us", m_name, us);
 }
 
 } // namespace core::utils
