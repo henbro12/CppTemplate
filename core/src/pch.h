@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <functional>
 #include <variant>
+#include <ranges>
 
 #include <string>
 #include <vector>

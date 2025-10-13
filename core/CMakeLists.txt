@@ -3,6 +3,7 @@
 
 add_library(CppTemplateCore STATIC
     "src/core/utils/logger.cpp"
+    "src/core/utils/profiler.cpp"
     "src/core/template/template.cpp"
 )
 
