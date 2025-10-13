@@ -7,10 +7,12 @@ A simple C++ CMake template with some basic features to easily get started on ne
 
 ---
 
-## 💡 Goals
+## 💡 Coding Guidelines
 
-- Learn and apply modern **C++23** (RAII, value semantics, templates, modules, etc.)
-- Architect the projects with **test-driven development** and clean layering
+We follow a set of internal C++ guidelines to ensure code quality and consistency.
+Our guidelines are based on [Jan Wilmans' C++ Guidelines](https://github.com/janwilmans/guidelines) (MIT Licensed), with modifications for this project.
+
+👉 See [guidelines.md](./guidelines.md) for the full list.
 
 ---
 
@@ -58,3 +60,7 @@ Managed via [vcpkg](https://github.com/microsoft/vcpkg):
 
 ---
 
+## License
+This project is licensed under the [MIT License](./LICENSE).
+
+---
