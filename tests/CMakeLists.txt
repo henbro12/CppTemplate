@@ -1,19 +1,20 @@
 # SPDX-License-Identifier: Apache-2.0
 # @copyright (C) 2025 Henbro12
 
-find_package(Catch2 REQUIRED)
+# Catch2 via vcpkg (v3):
+find_package(Catch2 3 CONFIG REQUIRED)
 
-add_executable(unit-tests
+add_executable(unit_tests
   test_logger.cpp
 )
 
-target_link_libraries(unit-tests PRIVATE
+target_link_libraries(unit_tests PRIVATE
   Catch2::Catch2WithMain
   template::core
 )
 
-# Automatically register with CTest
-include(CTest)
-
-# Enable Catch2 tests
-add_test(NAME unit-tests COMMAND unit-tests)
+# Automatically register all TEST_CASEs with CTest
+include(Catch)
+catch_discover_tests(unit_tests
+  TEST_PREFIX "unit."
+)

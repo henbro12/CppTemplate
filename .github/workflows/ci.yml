@@ -1,0 +1,140 @@
+name: CI
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  VCPKG_ROOT: ${{ github.workspace }}/external/vcpkg
+
+jobs:
+  msvc:
+    name: MSVC (${{ matrix.config }})
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [Debug, Release]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Ensure LF line endings + exec bit
+        run: |
+          git config core.autocrlf false
+          chmod +x scripts/*.sh
+
+      - name: Setup (vcpkg etc)
+        run: ./scripts/setup.sh
+
+      - name: Build
+        run: ./scripts/build.sh msvc ${{ matrix.config }}
+
+      - name: Tests (Debug only)
+        if: matrix.config == 'Debug'
+        run: ctest --preset msvc-tests --output-on-failure
+
+      - name: Upload app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-msvc-${{ matrix.config }}
+          path: build/msvc/app/${{ matrix.config }}/CppTemplateApp.exe
+          if-no-files-found: ignore
+
+  llvm-clang:
+    name: LLVM Clang (${{ matrix.config }})
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [Debug, Release]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install LLVM (Program Files)
+        run: choco install -y llvm --no-progress || true
+
+      - name: Setup (vcpkg etc)
+        run: ./scripts/setup.sh
+
+      - name: Build
+        run: ./scripts/build.sh clang ${{ matrix.config }}
+
+      - name: Tests (Debug only)
+        if: matrix.config == 'Debug'
+        run: ctest --preset clang-tests --output-on-failure
+
+      - name: Upload app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-clang-${{ matrix.config }}
+          path: build/clang/app/${{ matrix.config }}/CppTemplateApp.exe
+          if-no-files-found: ignore
+
+  mingw-gcc:
+    name: MSYS2 MinGW GCC (${{ matrix.config }})
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [Debug, Release]
+
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Remove preinstalled MSYS2 (if present)
+        shell: bash
+        run: rm -rf /c/msys64 || true
+
+      - name: Set up MSYS2 (mingw64)
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          msystem: MINGW64
+          location: C:\
+          install: >-
+            base-devel
+            git
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-ninja
+            mingw-w64-x86_64-gcc
+
+      - name: Setup (vcpkg etc)
+        shell: msys2 {0}
+        run: ./scripts/setup.sh
+
+      - name: Build
+        shell: msys2 {0}
+        run: ./scripts/build.sh gcc ${{ matrix.config }}
+
+      - name: Tests (Debug only)
+        if: matrix.config == 'Debug'
+        shell: msys2 {0}
+        run: ctest --preset gcc-tests --output-on-failure
+
+      - name: Upload app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-gcc-${{ matrix.config }}
+          path: build/gcc/app/${{ matrix.config }}/CppTemplateApp.exe
+          if-no-files-found: ignore

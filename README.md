@@ -148,6 +148,24 @@ Dependencies are managed via [vcpkg](https://github.com/microsoft/vcpkg):
 
 ---
 
+## 🧾 Using this repository as a template
+
+If you want to bootstrap a new project from this template, copy the repository contents into a new repo and then:
+
+- Update `project()` settings in `CMakeLists.txt` (name/version/description).
+- Replace the `core` and `app` sources with your project's initial code.
+- Update `vcpkg.json` with the dependencies your project needs.
+
+This template includes configuration files to help maintain consistency:
+
+- `.clang-format` — default coding style used by clang-format
+- `.editorconfig` — editor settings for whitespace and encoding
+- `.github/workflows/ci.yml` — example CI workflow that builds the project on Linux and Windows
+
+These are safe to keep or modify to match your team's preferences.
+
+---
+
 ## 📜 License
 
 This project is licensed under the [MIT License](./LICENSE).

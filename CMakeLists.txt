@@ -54,8 +54,7 @@ add_subdirectory(core)
 add_subdirectory(app)
 
 # Add testing support
-option(ENABLE_TESTING "Enable unit test targets" ON)
-if(ENABLE_TESTING)
-  enable_testing()
+include(CTest)
+if (BUILD_TESTING)
   add_subdirectory(tests)
 endif()

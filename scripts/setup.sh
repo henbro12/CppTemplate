@@ -47,25 +47,25 @@ fi
 # -------------------
 # Clone vcpkg
 # -------------------
-if [ ! -d "$VCPKG_DIR" ]; then
-    echo "[INFO] Cloning vcpkg into $VCPKG_DIR..."
-    git clone https://github.com/microsoft/vcpkg.git "$VCPKG_DIR"
+if [ ! -d "$VCPKG_DIR/.git" ]; then
+  echo "[INFO] Cloning vcpkg into $VCPKG_DIR..."
+  git clone --depth 1 https://github.com/microsoft/vcpkg.git "$VCPKG_DIR"
 fi
 
 # -------------------
 # Bootstrap vcpkg
 # -------------------
 if [[ "$PLATFORM" == "windows" ]]; then
-    if [ ! -f "$VCPKG_DIR/vcpkg.exe" ]; then
-        echo "[INFO] Bootstrapping vcpkg (Windows)..."
-        WIN_VCPKG_DIR=$(cd "$VCPKG_DIR" && pwd -W)
-        cmd.exe /c "$WIN_VCPKG_DIR\\bootstrap-vcpkg.bat"
-    fi
+  if [ ! -f "$VCPKG_DIR/vcpkg.exe" ]; then
+    echo "[INFO] Bootstrapping vcpkg (Windows)..."
+    WIN_VCPKG_DIR=$(cd "$VCPKG_DIR" && cygpath -w "$PWD")
+    cmd.exe /c "$WIN_VCPKG_DIR\\bootstrap-vcpkg.bat -disableMetrics"
+  fi
 else
-    if [ ! -f "$VCPKG_DIR/vcpkg" ]; then
-        echo "[INFO] Bootstrapping vcpkg (Unix)..."
-        "$VCPKG_DIR/bootstrap-vcpkg.sh"
-    fi
+  if [ ! -f "$VCPKG_DIR/vcpkg" ]; then
+    echo "[INFO] Bootstrapping vcpkg (Unix)..."
+    "$VCPKG_DIR/bootstrap-vcpkg.sh" -disableMetrics
+  fi
 fi
 
 # -------------------
@@ -73,12 +73,7 @@ fi
 # -------------------
 export VCPKG_ROOT=$(cd "$VCPKG_DIR" && pwd)
 echo "[INFO] VCPKG_ROOT set to $VCPKG_ROOT"
-
-# -------------------
-# Configure project
-# -------------------
-echo "[INFO] Configuring project using CMake Presets..."
-cmake --preset=debug
+echo ""
 
 echo "[SUCCESS] Setup complete. You can now build with:"
 echo "  ./scripts/build.sh"
