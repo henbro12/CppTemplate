@@ -5,84 +5,69 @@
     "minor": 25,
     "patch": 0
   },
+
   "configurePresets": [
     {
-      "name": "debug",
-      "displayName": "Debug Build",
-      "description": "Use this for development with debug info and logging",
-      "hidden": false,
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/debug",
+      "name": "msvc",
+      "displayName": "MSVC (VS 2022)",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/build/msvc",
+      "architecture": { "value": "x64" },
       "cacheVariables": {
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-        "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/external/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-windows",
         "ENABLE_TESTING": "ON"
       }
     },
     {
-      "name": "release",
-      "displayName": "Release Build",
-      "description": "Optimized release build with logger disabled",
-      "hidden": false,
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/release",
+      "name": "gcc",
+      "displayName": "MSYS2 MinGW GCC (Ninja Multi-Config)",
+      "generator": "Ninja Multi-Config",
+      "binaryDir": "${sourceDir}/build/gcc",
       "cacheVariables": {
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-        "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/external/vcpkg/scripts/buildsystems/vcpkg.cmake",
-        "ENABLE_TESTING": "OFF"
+        "VCPKG_TARGET_TRIPLET": "x64-mingw-static",
+        "CMAKE_C_COMPILER": "C:/msys64/mingw64/bin/gcc.exe",
+        "CMAKE_CXX_COMPILER": "C:/msys64/mingw64/bin/g++.exe",
+        "CMAKE_CXX_FLAGS": "-fdiagnostics-color=always",
+        "ENABLE_TESTING": "ON",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
     },
     {
-      "name": "dist",
-      "displayName": "Distribution Build",
-      "description": "Optimized distribution build",
-      "hidden": false,
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/dist",
+      "name": "clang",
+      "displayName": "LLVM Clang (MSVC ABI, Ninja Multi-Config)",
+      "generator": "Ninja Multi-Config",
+      "binaryDir": "${sourceDir}/build/clang",
       "cacheVariables": {
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "OFF",
-        "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreaded",
-        "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/external/vcpkg/scripts/buildsystems/vcpkg.cmake",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/dist",
-        "VCPKG_TARGET_TRIPLET": "x64-windows-static",
-        "BUILD_SHARED_LIBS": "OFF",
-        "ENABLE_TESTING": "OFF"
-      }
-    },
-    {
-      "name": "test",
-      "displayName": "Test Build",
-      "description": "Build for running unit tests",
-      "hidden": false,
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/test",
-      "cacheVariables": {
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/external/vcpkg/scripts/buildsystems/vcpkg.cmake",
-        "ENABLE_TESTING": "ON"
+        "VCPKG_TARGET_TRIPLET": "x64-windows",
+        "CMAKE_C_COMPILER": "C:/Program Files/LLVM/bin/clang.exe",
+        "CMAKE_CXX_COMPILER": "C:/Program Files/LLVM/bin/clang++.exe",
+        "CMAKE_CXX_FLAGS": "-fdiagnostics-color=always",
+        "ENABLE_TESTING": "ON",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
     }
   ],
+
   "buildPresets": [
-    {
-      "name": "debug",
-      "configurePreset": "debug"
-    },
-    {
-      "name": "release",
-      "configurePreset": "release"
-    },
-    {
-      "name": "dist",
-      "configurePreset": "dist"
-    },
-    {
-      "name": "test",
-      "configurePreset": "test"
-    }
+    { "name": "msvc-Debug",             "configurePreset": "msvc",     "configuration": "Debug" },
+    { "name": "msvc-Release",           "configurePreset": "msvc",     "configuration": "Release" },
+    { "name": "msvc-RelWithDebInfo",    "configurePreset": "msvc",     "configuration": "RelWithDebInfo" },
+
+    { "name": "gcc-Debug",              "configurePreset": "gcc",      "configuration": "Debug" },
+    { "name": "gcc-Release",            "configurePreset": "gcc",      "configuration": "Release" },
+    { "name": "gcc-RelWithDebInfo",     "configurePreset": "gcc",      "configuration": "RelWithDebInfo" },
+
+    { "name": "clang-Debug",            "configurePreset": "clang",    "configuration": "Debug" },
+    { "name": "clang-Release",          "configurePreset": "clang",    "configuration": "Release" },
+    { "name": "clang-RelWithDebInfo",   "configurePreset": "clang",    "configuration": "RelWithDebInfo" }
+  ],
+
+  "testPresets": [
+    { "name": "msvc-tests",    "configurePreset": "msvc",    "configuration": "Debug" },
+    { "name": "gcc-tests",     "configurePreset": "gcc",     "configuration": "Debug" },
+    { "name": "clang-tests",   "configurePreset": "clang",   "configuration": "Debug" }
   ]
 }

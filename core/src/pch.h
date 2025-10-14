@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <functional>
 #include <memory>
+#include <numeric>
 #include <ranges>
 #include <utility>
 #include <variant>

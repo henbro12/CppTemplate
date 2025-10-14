@@ -15,4 +15,9 @@ target_link_libraries(CppTemplateApp PRIVATE
 
 enable_common_warnings(CppTemplateApp)
 
+target_compile_definitions(CppTemplateApp PRIVATE
+  $<$<CONFIG:Debug>:_DEBUG;DEBUG>
+  $<$<CONFIG:Release>:_RELEASE;RELEASE>
+)
+
 add_executable(template::app ALIAS CppTemplateApp)

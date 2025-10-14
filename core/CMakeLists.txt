@@ -27,4 +27,9 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   )
 endif()
 
+target_compile_definitions(CppTemplateCore PRIVATE
+  $<$<CONFIG:Debug>:_DEBUG;DEBUG>
+  $<$<CONFIG:Release>:_RELEASE;RELEASE>
+)
+
 add_library(template::core ALIAS CppTemplateCore)
