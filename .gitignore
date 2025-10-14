@@ -33,7 +33,7 @@
 /compile_commands.json
 
 # VSCode
-.vscode/
+.vscode/settings.json
 *.code-workspace
 
 # Visual Studio
