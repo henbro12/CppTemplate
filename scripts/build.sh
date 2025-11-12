@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Usage:
-#   ./scripts/build.sh [-t TOOLCHAIN] [-c CONFIG] [-t]
+#   ./scripts/build.sh [-t TOOLCHAIN] [-c CONFIG] [--test]
 #   TOOLCHAIN (Windows): msvc | gcc | clang
 #   TOOLCHAIN (Linux)  : gcc  | clang
 #   TOOLCHAIN (macOS)  : appleclang
@@ -33,7 +33,7 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     -t|--toolchain) TOOLCHAIN="$2"; shift 2 ;;
     -c|--config)    CONFIG="$2"; shift 2 ;;
-    -t|--test)      RUN_TESTS="true"; shift ;;
+    --test)         RUN_TESTS="true"; shift ;;
     *) echo "[ERROR] Unknown option: $1"; exit 1 ;;
   esac
 done

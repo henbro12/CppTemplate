@@ -1,18 +1,32 @@
-# C++ CMake Template
+# C++ Cross-Platform CMake Template
 
 [![GitHub Release][releases-shield]][releases]
 [![License][license-shield]](LICENSE)
 
-A modern C++ project template using **CMake presets**, **vcpkg**, and **Ninja** — designed to quickly bootstrap new projects with support for **MSVC**, **GCC**, and **Clang**.
+A **modern, cross-platform C++ project template** using **CMake presets**, **vcpkg**, and **Ninja** — designed to quickly bootstrap new projects on **Windows**, **Linux**, and **macOS** with support for **MSVC**, **GCC**, and **Clang**.
+
+This template automatically detects your host OS and uses the matching compiler toolchain and preset when building via the provided scripts.
 
 ---
 
 ## 💡 Coding Guidelines
 
-We follow a set of internal C++ guidelines to ensure code quality and consistency.
-They’re based on [Jan Wilmans' C++ Guidelines](https://github.com/janwilmans/guidelines) (MIT licensed), with modifications for this project.
+We follow internal C++ guidelines based on [Jan Wilmans' C++ Guidelines](https://github.com/janwilmans/guidelines) (MIT licensed), with minor modifications.
 
 👉 See [guidelines.md](./guidelines.md) for the full list.
+
+---
+
+## 🧩 Cross-Platform Overview
+
+| Operating System | Default Toolchain | Other Supported Toolchains |
+|------------------|------------------|-----------------------------|
+| **Windows** | MSVC (`cl.exe`) | LLVM **Clang-CL**, MSYS2 **MinGW-GCC** |
+| **Linux** | GCC | LLVM **Clang** |
+| **macOS (Apple Silicon)** | AppleClang (`clang`) | - |
+
+> 🧠 The `build.sh` and `run.sh` scripts **automatically detect your OS** and select the correct compiler preset.
+> You can override it manually with `-t <toolchain>` if you want to test a specific compiler.
 
 ---
 
@@ -20,159 +34,205 @@ They’re based on [Jan Wilmans' C++ Guidelines](https://github.com/janwilmans/g
 
 ### 1. Install dependencies
 
-Before you start, make sure the following tools are installed:
+Make sure the following tools are installed on your system:
 
+#### 🪟 Windows
+- **Visual Studio Build Tools 2022** (for MSVC)
+- **LLVM/Clang** *(optional)* – for Clang builds
+- **MSYS2** *(optional)* – for GCC/MinGW builds
 - **CMake ≥ 3.25**
-- **Ninja** (build system)
-- **vcpkg** (bootstrapped automatically by `setup.sh`)
-- **Visual Studio Build Tools** — (for MSVC builds on Windows)
-- **LLVM/Clang** *(optional)* — (for Clang builds)
-- **MSYS2** *(optional)* — (for GCC/MinGW builds)
+- **Ninja**
+- **Git**
 
-Then set up the project:
+#### 🐧 Linux
+- **GCC** or **Clang**
+- **CMake ≥ 3.25**
+- **Ninja**
+- **Git**
+
+#### 🍎 macOS
+- **Xcode Command Line Tools** (provides AppleClang)
+- **CMake ≥ 3.25**
+- **Ninja**
+- **Git**
+- *(Optional)* **Homebrew** for package installs
+
+Then run once to set up **vcpkg** and dependencies:
 
 ```bash
 ./scripts/setup.sh
 ```
 
+This bootstraps vcpkg under `external/vcpkg` and installs required dependencies defined in `vcpkg.json`.
+
 ---
 
 ## ⚙️ Building the Project
 
-Three toolchains are supported:
+### Supported Toolchains
 
-| Toolchain    | Preset name   | Description                                       |
-|--------------|---------------|---------------------------------------------------|
-| **MSVC**     | `msvc`        | Microsoft Visual C++ compiler                     |
-| **GCC**      | `gcc`         | GCC from MSYS2 / MinGW                            |
-| **Clang**    | `clang`       | LLVM Clang (installed to `C:\Program Files\LLVM`) |
+| OS | Toolchain | Preset | Description |
+|----|-----------|--------|-------------|
+| Windows | **msvc** | `win-msvc` | Visual Studio 17 2022 |
+| Windows | **clang** | `win-clangcl` | LLVM Clang using MSVC ABI/linker |
+| Windows | **gcc** | `win-mingw-gcc` | GCC via MSYS2/MinGW (static triplet) |
+| Linux | **gcc** | `linux-gcc` | GNU Compiler Collection on Linux |
+| Linux | **clang** | `linux-clang` | LLVM Clang on Linux |
+| MAC | **appleclang** | `mac-appleclang` | AppleClang on macOS (arm64) |
 
-And three build configurations:
-
-- `Debug` — Debug symbols, assertions enabled, `_DEBUG` defined
-- `Release` — Optimized, assertions disabled
-- `RelWithDebInfo` — Release build with debug info
+### Supported Configurations
+- `Debug` — full debug symbols, assertions enabled
+- `Release` — optimized build, assertions disabled
+- `RelWithDebInfo` — optimized with debug info
 
 ---
 
-### 🧪 Build with Scripts (recommended)
+### 🧪 Build with Scripts (Recommended)
 
-Use the provided build script to configure & build the project easily:
+The build scripts automatically detect your OS and compiler:
 
 ```bash
-./scripts/build.sh <toolchain> <configuration> [target]
+./scripts/build.sh [-t <toolchain>] [-c <config>] [--test]
 ```
 
 Examples:
 
 ```bash
-# Build the full project with MSVC in Debug mode
-./scripts/build.sh msvc Debug
+# Default build (auto-detected toolchain, Debug)
+./scripts/build.sh
 
-# Build with GCC in Release mode
-./scripts/build.sh gcc Release
+# Explicitly build MSVC Release
+./scripts/build.sh -t msvc -c Release
 
-# Build only the unit tests with Clang in Debug mode
-./scripts/build.sh clang Debug unit-tests
-```
-
-If you omit arguments, it defaults to:
-
-```bash
-./scripts/build.sh gcc Debug
+# Build and run unit tests (Debug only)
+./scripts/build.sh --test
 ```
 
 ---
 
 ## ▶️ Running the Application
 
-You can run the main application with:
+Use the run script to automatically build (if needed) and execute the app:
 
 ```bash
-./scripts/run.sh <toolchain> <configuration>
+./scripts/run.sh [-t <toolchain>] [-c <config>] [-- <args>]
 ```
 
 Examples:
 
 ```bash
-# Run the app built with MSVC Debug
-./scripts/run.sh msvc Debug
+# Run with auto-detected OS toolchain (Debug)
+./scripts/run.sh
 
-# Run the app built with GCC Release
-./scripts/run.sh gcc Release
+# Run Clang-CL build in Release mode
+./scripts/run.sh -t clangcl -c Release
+
+# Pass arguments to the app
+./scripts/run.sh -- --help
 ```
 
 ---
 
 ## 🧪 Running Tests
 
-To build and run unit tests:
+Unit tests use [Catch2](https://github.com/catchorg/Catch2) and are automatically built when `BUILD_TESTING` is enabled.
+
+To build and run tests manually:
 
 ```bash
-./scripts/build.sh gcc Debug unit-tests
-ctest --preset gcc-tests
+./scripts/build.sh --test
 ```
 
-Or simply run the test executable directly:
+Or invoke directly:
 
 ```bash
-./build/gcc/tests/Debug/unit-tests.exe
+ctest --preset <preset-name> --output-on-failure
+```
+
+Example:
+```bash
+ctest --preset linux-gcc-tests
 ```
 
 ---
 
 ## 📁 Output Structure
 
-Each toolchain/configuration combination has its own build folder:
+All builds are separated by toolchain and configuration to prevent conflicts:
 
 ```
 build/
-├─ msvc/
-│   └─ app/Debug/CppTemplateApp.exe
-├─ gcc/
-│   └─ app/Debug/CppTemplateApp.exe
-└─ clang/
-    └─ app/Release/CppTemplateApp.exe
+├─ win-msvc/
+│   ├─ app/Debug/CppTemplateApp.exe
+│   └─ app/Release/CppTemplateApp.exe
+├─ win-clangcl/
+│   ├─ app/Debug/CppTemplateApp.exe
+│   └─ app/Release/CppTemplateApp.exe
+├─ win-mingw-gcc/
+│   ├─ app/Debug/CppTemplateApp.exe
+│   └─ app/Release/CppTemplateApp.exe
+├─ linux-gcc/
+│   ├─ app/Debug/CppTemplateApp
+│   └─ app/Release/CppTemplateApp
+├─ linux-clang/
+│   ├─ app/Debug/CppTemplateApp
+│   └─ app/Release/CppTemplateApp
+└─ mac-appleclang/
+    ├─ app/Debug/CppTemplateApp
+    └─ app/Release/CppTemplateApp
 ```
-
-This ensures different compiler builds never clash.
 
 ---
 
 ## 📦 Dependencies
 
-Dependencies are managed via [vcpkg](https://github.com/microsoft/vcpkg):
+Dependencies are managed through **vcpkg** and defined in [`vcpkg.json`](./vcpkg.json):
 
 - [**spdlog**](https://github.com/gabime/spdlog) — high-performance logging
-- [**Catch2**](https://github.com/catchorg/Catch2) — unit testing framework
+- [**Catch2**](https://github.com/catchorg/Catch2) — lightweight unit testing
+
+Each toolchain has an isolated `vcpkg_installed` directory under its build folder, ensuring clean separation between compilers and architectures.
 
 ---
 
-## 🧾 Using this repository as a template
+## 🧾 Using This Repository as a Template
 
-If you want to bootstrap a new project from this template, copy the repository contents into a new repo and then:
+If you want to start a new project from this template:
 
-- Update `project()` settings in `CMakeLists.txt` (name/version/description).
-- Replace the `core` and `app` sources with your project's initial code.
-- Update `vcpkg.json` with the dependencies your project needs.
+1. Click **“Use this template”** on GitHub.
+2. Update project metadata in `CMakeLists.txt`:
+   ```cmake
+   project(MyProject VERSION 0.1 LANGUAGES CXX)
+   ```
+3. Replace `core/` and `app/` sources with your own.
+4. Update `vcpkg.json` for your dependencies.
 
-This template includes configuration files to help maintain consistency:
+Included configuration files:
+- `.clang-format` — C++ code style
+- `.editorconfig` — editor settings
+- `.github/workflows/ci.yml` — GitHub Actions CI for all platforms
+- `CMakePresets.json` — unified build configurations
 
-- `.clang-format` — default coding style used by clang-format
-- `.editorconfig` — editor settings for whitespace and encoding
-- `.github/workflows/ci.yml` — example CI workflow that builds the project on Linux and Windows
+---
 
-These are safe to keep or modify to match your team's preferences.
+## 🧱 Continuous Integration (CI)
+
+The provided GitHub Actions workflow:
+- Builds **MSVC**, **Clang-CL**, and **MinGW** on **Windows**
+- Builds **GCC** and **Clang** on **Linux**
+- Builds **AppleClang (arm64)** on **macOS**
+- Runs unit tests for all toolchains in `Debug`
+- Uploads app artifacts for every compiler/config combo
+
+---
+
+✅ **Tip:** You can also open this project in **VS Code** and use CMake Tools’ “Configure Preset” and “Build Preset” selectors to build and run directly — no scripts required.
 
 ---
 
 ## 📜 License
 
 This project is licensed under the [MIT License](./LICENSE).
-
----
-
-✅ **Tip:** You can also build and run directly inside VS Code by selecting a **Configure Preset** (toolchain) and **Build Preset** (configuration) from the status bar — no scripts needed.
 
 ---
 
