@@ -1,71 +1,132 @@
 {
-  "version": 3,
-  "cmakeMinimumRequired": {
-    "major": 3,
-    "minor": 25,
-    "patch": 0
-  },
+  "version": 6,
+  "cmakeMinimumRequired": { "major": 3, "minor": 25, "patch": 0 },
 
   "configurePresets": [
     {
-      "name": "msvc",
-      "displayName": "MSVC (VS 2022)",
+      "name": "win-msvc",
+      "displayName": "Windows | MSVC (Visual Studio 2022)",
       "generator": "Visual Studio 17 2022",
-      "binaryDir": "${sourceDir}/build/msvc",
+      "binaryDir": "${sourceDir}/build/win-msvc",
       "architecture": { "value": "x64" },
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" },
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/external/vcpkg/scripts/buildsystems/vcpkg.cmake",
-        "VCPKG_TARGET_TRIPLET": "x64-windows"
+        "VCPKG_TARGET_TRIPLET": "x64-windows",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
     },
     {
-      "name": "gcc",
-      "displayName": "MSYS2 MinGW GCC (Ninja Multi-Config)",
+      "name": "win-mingw-gcc",
+      "displayName": "Windows | MSYS2 MinGW GCC (Ninja Multi-Config)",
       "generator": "Ninja Multi-Config",
-      "binaryDir": "${sourceDir}/build/gcc",
+      "binaryDir": "${sourceDir}/build/win-mingw-gcc",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" },
       "cacheVariables": {
+        "CMAKE_C_COMPILER": "C:/msys64/mingw64/bin/gcc.exe",
+        "CMAKE_CXX_COMPILER": "C:/msys64/mingw64/bin/g++.exe",
         "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/external/vcpkg/scripts/buildsystems/vcpkg.cmake",
         "VCPKG_TARGET_TRIPLET": "x64-mingw-static",
         "VCPKG_HOST_TRIPLET": "x64-mingw-static",
-        "CMAKE_C_COMPILER": "C:/msys64/mingw64/bin/gcc.exe",
-        "CMAKE_CXX_COMPILER": "C:/msys64/mingw64/bin/g++.exe",
         "CMAKE_CXX_FLAGS": "-fdiagnostics-color=always",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
     },
     {
-      "name": "clang",
-      "displayName": "LLVM Clang (MSVC ABI, Ninja Multi-Config)",
+      "name": "win-clangcl",
+      "displayName": "Windows | Clang (clang-cl, MSVC ABI, Ninja Multi-Config)",
       "generator": "Ninja Multi-Config",
-      "binaryDir": "${sourceDir}/build/clang",
+      "binaryDir": "${sourceDir}/build/win-clangcl",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" },
       "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang-cl",
+        "CMAKE_CXX_COMPILER": "clang-cl",
         "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/external/vcpkg/scripts/buildsystems/vcpkg.cmake",
         "VCPKG_TARGET_TRIPLET": "x64-windows",
-        "CMAKE_C_COMPILER": "C:/Program Files/LLVM/bin/clang.exe",
-        "CMAKE_CXX_COMPILER": "C:/Program Files/LLVM/bin/clang++.exe",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+
+    {
+      "name": "linux-gcc",
+      "displayName": "Linux | GCC (Ninja)",
+      "generator": "Ninja Multi-Config",
+      "binaryDir": "${sourceDir}/build/linux-gcc",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Linux" },
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++",
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/external/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-linux",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "linux-clang",
+      "displayName": "Linux | Clang (Ninja)",
+      "generator": "Ninja Multi-Config",
+      "binaryDir": "${sourceDir}/build/linux-clang",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Linux" },
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/external/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-linux",
         "CMAKE_CXX_FLAGS": "-fdiagnostics-color=always",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+
+    {
+      "name": "mac-appleclang",
+      "displayName": "macOS | AppleClang (Ninja)",
+      "generator": "Ninja Multi-Config",
+      "binaryDir": "${sourceDir}/build/mac-appleclang",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Darwin" },
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/external/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "arm64-osx",
+        "CMAKE_OSX_DEPLOYMENT_TARGET": "14.0",
+        "CMAKE_OSX_ARCHITECTURES": "arm64",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
     }
   ],
 
   "buildPresets": [
-    { "name": "msvc-Debug",             "configurePreset": "msvc",     "configuration": "Debug" },
-    { "name": "msvc-Release",           "configurePreset": "msvc",     "configuration": "Release" },
-    { "name": "msvc-RelWithDebInfo",    "configurePreset": "msvc",     "configuration": "RelWithDebInfo" },
+    { "name": "win-msvc-Debug",         "configurePreset": "win-msvc", "configuration": "Debug" },
+    { "name": "win-msvc-Release",       "configurePreset": "win-msvc", "configuration": "Release" },
+    { "name": "win-msvc-RelWithDebInfo","configurePreset": "win-msvc", "configuration": "RelWithDebInfo" },
 
-    { "name": "gcc-Debug",              "configurePreset": "gcc",      "configuration": "Debug" },
-    { "name": "gcc-Release",            "configurePreset": "gcc",      "configuration": "Release" },
-    { "name": "gcc-RelWithDebInfo",     "configurePreset": "gcc",      "configuration": "RelWithDebInfo" },
+    { "name": "win-mingw-gcc-Debug",          "configurePreset": "win-mingw-gcc", "configuration": "Debug" },
+    { "name": "win-mingw-gcc-Release",        "configurePreset": "win-mingw-gcc", "configuration": "Release" },
+    { "name": "win-mingw-gcc-RelWithDebInfo", "configurePreset": "win-mingw-gcc", "configuration": "RelWithDebInfo" },
 
-    { "name": "clang-Debug",            "configurePreset": "clang",    "configuration": "Debug" },
-    { "name": "clang-Release",          "configurePreset": "clang",    "configuration": "Release" },
-    { "name": "clang-RelWithDebInfo",   "configurePreset": "clang",    "configuration": "RelWithDebInfo" }
+    { "name": "win-clangcl-Debug",          "configurePreset": "win-clangcl", "configuration": "Debug" },
+    { "name": "win-clangcl-Release",        "configurePreset": "win-clangcl", "configuration": "Release" },
+    { "name": "win-clangcl-RelWithDebInfo", "configurePreset": "win-clangcl", "configuration": "RelWithDebInfo" },
+
+    { "name": "linux-gcc-Debug",          "configurePreset": "linux-gcc", "configuration": "Debug" },
+    { "name": "linux-gcc-Release",        "configurePreset": "linux-gcc", "configuration": "Release" },
+    { "name": "linux-gcc-RelWithDebInfo", "configurePreset": "linux-gcc", "configuration": "RelWithDebInfo" },
+
+    { "name": "linux-clang-Debug",          "configurePreset": "linux-clang", "configuration": "Debug" },
+    { "name": "linux-clang-Release",        "configurePreset": "linux-clang", "configuration": "Release" },
+    { "name": "linux-clang-RelWithDebInfo", "configurePreset": "linux-clang", "configuration": "RelWithDebInfo" },
+
+    { "name": "mac-appleclang-Debug",         "configurePreset": "mac-appleclang", "configuration": "Debug" },
+    { "name": "mac-appleclang-Release",       "configurePreset": "mac-appleclang", "configuration": "Release" },
+    { "name": "mac-appleclang-RelWithDebInfo","configurePreset": "mac-appleclang", "configuration": "RelWithDebInfo" }
   ],
 
   "testPresets": [
-    { "name": "msvc-tests",    "configurePreset": "msvc",    "configuration": "Debug" },
-    { "name": "gcc-tests",     "configurePreset": "gcc",     "configuration": "Debug" },
-    { "name": "clang-tests",   "configurePreset": "clang",   "configuration": "Debug" }
+    { "name": "win-msvc-tests",       "configurePreset": "win-msvc",        "configuration": "Debug" },
+    { "name": "win-mingw-gcc-tests",  "configurePreset": "win-mingw-gcc",   "configuration": "Debug" },
+    { "name": "win-clangcl-tests",    "configurePreset": "win-clangcl",     "configuration": "Debug" },
+
+    { "name": "linux-gcc-tests",      "configurePreset": "linux-gcc",       "configuration": "Debug" },
+    { "name": "linux-clang-tests",    "configurePreset": "linux-clang",     "configuration": "Debug" },
+
+    { "name": "mac-appleclang-tests", "configurePreset": "mac-appleclang",  "configuration": "Debug" }
   ]
 }

@@ -1,49 +1,74 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Usage: ./scripts/build.sh [toolchain] [config] [--test]
-# toolchain: msvc  | gcc     | clang         (auto-detected if omitted)
-# config   : Debug | Release | RelWithDebInfo   (default: Debug)
-# --test   : run ctest for matching test preset
+# Usage:
+#   ./scripts/build.sh [-t TOOLCHAIN] [-c CONFIG] [-t]
+#   TOOLCHAIN (Windows): msvc | gcc | clang
+#   TOOLCHAIN (Linux)  : gcc  | clang
+#   TOOLCHAIN (macOS)  : appleclang
+#   CONFIG: Debug | Release | RelWithDebInfo  (default: Debug)
 
-# --- detect platform default ---
 uname_s=$(uname -s || echo "")
-default_toolchain="gcc"
 case "$uname_s" in
-  MINGW*|MSYS*|CYGWIN*) default_toolchain="msvc" ;;  # Git Bash on Windows
-  Darwin*)              default_toolchain="clang" ;; # Xcode/Apple Clang later
-  Linux*)               default_toolchain="gcc" ;;
+  MINGW*|MSYS*|CYGWIN*) HOST_OS="Windows" ;;
+  Darwin*)              HOST_OS="Darwin"  ;;
+  Linux*)               HOST_OS="Linux"   ;;
+  *)                    HOST_OS="$uname_s" ;;
 esac
 
-TOOLCHAIN="${1:-$default_toolchain}"
-CONFIG="${2:-Debug}"
+# defaults per OS
+case "$HOST_OS" in
+  Windows) DEFAULT_TOOLCHAIN="msvc" ;;
+  Linux)   DEFAULT_TOOLCHAIN="gcc"  ;;
+  Darwin)  DEFAULT_TOOLCHAIN="appleclang" ;;
+  *)       DEFAULT_TOOLCHAIN="gcc"  ;;
+esac
+
+TOOLCHAIN="$DEFAULT_TOOLCHAIN"
+CONFIG="Debug"
 RUN_TESTS="false"
-if [[ "${3:-}" == "--test" ]]; then RUN_TESTS="true"; fi
 
-CONFIGURE_PRESET="$TOOLCHAIN"
-BUILD_PRESET="$TOOLCHAIN-$CONFIG"
+# parse flags
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -t|--toolchain) TOOLCHAIN="$2"; shift 2 ;;
+    -c|--config)    CONFIG="$2"; shift 2 ;;
+    -t|--test)      RUN_TESTS="true"; shift ;;
+    *) echo "[ERROR] Unknown option: $1"; exit 1 ;;
+  esac
+done
 
-echo "[INFO] Toolchain       : $TOOLCHAIN"
-echo "[INFO] Configure preset: $CONFIGURE_PRESET"
-echo "[INFO] Build preset    : $BUILD_PRESET"
-echo "[INFO] Configuration   : $CONFIG"
+CONFIGURE_PRESET=""
+TEST_PRESET=""
 
-# Configure
+case "$HOST_OS:$TOOLCHAIN" in
+  Windows:msvc)        CONFIGURE_PRESET="win-msvc";       TEST_PRESET="win-msvc-tests" ;;
+  Windows:gcc)         CONFIGURE_PRESET="win-mingw-gcc";  TEST_PRESET="win-mingw-gcc-tests" ;;
+  Windows:clang)       CONFIGURE_PRESET="win-clangcl";    TEST_PRESET="win-clangcl-tests" ;;
+  Linux:gcc)           CONFIGURE_PRESET="linux-gcc";      TEST_PRESET="linux-gcc-tests" ;;
+  Linux:clang)         CONFIGURE_PRESET="linux-clang";    TEST_PRESET="linux-clang-tests" ;;
+  Darwin:appleclang)   CONFIGURE_PRESET="mac-appleclang"; TEST_PRESET="mac-appleclang-tests" ;;
+  *)
+    echo "[ERROR] Unsupported host/toolchain combo: $HOST_OS / $TOOLCHAIN"
+    exit 1
+    ;;
+esac
+
+BUILD_PRESET="${CONFIGURE_PRESET}-${CONFIG}"
+
+echo "[INFO] Host OS          : $HOST_OS"
+echo "[INFO] Toolchain        : $TOOLCHAIN"
+echo "[INFO] Configure preset : $CONFIGURE_PRESET"
+echo "[INFO] Build preset     : $BUILD_PRESET"
+echo "[INFO] Configuration    : $CONFIG"
+
 cmake --preset "$CONFIGURE_PRESET"
-
-# Build (always builds the whole project)
 cmake --build --preset "$BUILD_PRESET"
 
 echo "[SUCCESS] Build complete."
 
-# Run tests if requested AND in Debug
 if [[ "$RUN_TESTS" == "true" && "$CONFIG" == "Debug" ]]; then
-  echo "[INFO] Running tests    : $TOOLCHAIN"
-  case "$TOOLCHAIN" in
-    msvc)  ctest --preset msvc-tests  --output-on-failure ;;
-    gcc)   ctest --preset gcc-tests   --output-on-failure ;;
-    clang) ctest --preset clang-tests --output-on-failure ;;
-    *)     echo "[WARN] Unknown toolchain '$TOOLCHAIN' for tests; skipping." ;;
-  esac
+  echo "[INFO] Running tests: $TEST_PRESET"
+  ctest --preset "$TEST_PRESET" --output-on-failure
   echo "[SUCCESS] Tests complete."
 fi

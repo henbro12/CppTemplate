@@ -1,7 +1,10 @@
 name: CI
+
 on:
-  push:
   pull_request:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -14,16 +17,16 @@ env:
   VCPKG_ROOT: ${{ github.workspace }}/external/vcpkg
 
 jobs:
-  msvc:
-    name: MSVC (${{ matrix.config }})
+  # ---------------------- Windows ----------------------
+  windows:
+    name: Windows (${{ matrix.toolchain }} | ${{ matrix.config }})
     runs-on: windows-2022
     strategy:
       fail-fast: false
       matrix:
-        config: [Debug, Release]
-    defaults:
-      run:
-        shell: bash
+        toolchain: [ msvc, gcc, clang ]
+        config:    [ Debug, Release ]
+
     steps:
       - name: Checkout (with submodules)
         uses: actions/checkout@v4
@@ -31,82 +34,27 @@ jobs:
           submodules: recursive
 
       - name: Ensure LF line endings + exec bit
+        shell: bash
         run: |
           git config core.autocrlf false
           chmod +x scripts/*.sh
 
-      - name: Setup (vcpkg etc)
-        run: ./scripts/setup.sh
+      - name: Set up MSVC environment
+        if: matrix.toolchain != 'gcc'
+        uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Build
-        run: ./scripts/build.sh msvc ${{ matrix.config }}
-
-      - name: Tests (Debug only)
-        if: matrix.config == 'Debug'
-        run: ctest --preset msvc-tests --output-on-failure
-
-      - name: Upload app artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-msvc-${{ matrix.config }}
-          path: build/msvc/app/${{ matrix.config }}/CppTemplateApp.exe
-          if-no-files-found: ignore
-
-  llvm-clang:
-    name: LLVM Clang (${{ matrix.config }})
-    runs-on: windows-2022
-    strategy:
-      fail-fast: false
-      matrix:
-        config: [Debug, Release]
-    defaults:
-      run:
+      - name: Install LLVM for clang-cl
+        if: matrix.toolchain == 'clang'
         shell: bash
-    steps:
-      - name: Checkout (with submodules)
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Install LLVM (Program Files)
         run: choco install -y llvm --no-progress || true
 
-      - name: Setup (vcpkg etc)
-        run: ./scripts/setup.sh
-
-      - name: Build
-        run: ./scripts/build.sh clang ${{ matrix.config }}
-
-      - name: Tests (Debug only)
-        if: matrix.config == 'Debug'
-        run: ctest --preset clang-tests --output-on-failure
-
-      - name: Upload app artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-clang-${{ matrix.config }}
-          path: build/clang/app/${{ matrix.config }}/CppTemplateApp.exe
-          if-no-files-found: ignore
-
-  mingw-gcc:
-    name: MSYS2 MinGW GCC (${{ matrix.config }})
-    runs-on: windows-2022
-    strategy:
-      fail-fast: false
-      matrix:
-        config: [Debug, Release]
-
-    steps:
-      - name: Checkout (with submodules)
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
       - name: Remove preinstalled MSYS2 (if present)
+        if: matrix.toolchain == 'gcc'
         shell: bash
         run: rm -rf /c/msys64 || true
 
       - name: Set up MSYS2 (mingw64)
+        if: matrix.toolchain == 'gcc'
         uses: msys2/setup-msys2@v2
         with:
           update: true
@@ -119,22 +67,153 @@ jobs:
             mingw-w64-x86_64-ninja
             mingw-w64-x86_64-gcc
 
-      - name: Setup (vcpkg etc)
+      - name: Setup (vcpkg etc) — MSVC/Clang
+        if: matrix.toolchain != 'gcc'
+        shell: bash
+        run: ./scripts/setup.sh
+
+      - name: Setup (vcpkg etc) — GCC
+        if: matrix.toolchain == 'gcc'
         shell: msys2 {0}
         run: ./scripts/setup.sh
 
-      - name: Build
-        shell: msys2 {0}
-        run: ./scripts/build.sh gcc ${{ matrix.config }}
+      - name: Build — MSVC
+        if: matrix.toolchain == 'msvc'
+        shell: bash
+        run: ./scripts/build.sh -t ${{ matrix.toolchain }} -c ${{ matrix.config }}
 
-      - name: Tests (Debug only)
-        if: matrix.config == 'Debug'
+      - name: Build — GCC
+        if: matrix.toolchain == 'gcc'
         shell: msys2 {0}
-        run: ctest --preset gcc-tests --output-on-failure
+        run: ./scripts/build.sh -t ${{ matrix.toolchain }} -c ${{ matrix.config }}
+
+      - name: Build — Clang
+        if: matrix.toolchain == 'clang'
+        shell: bash
+        run: ./scripts/build.sh -t ${{ matrix.toolchain }} -c ${{ matrix.config }}
+
+      - name: Tests — MSVC
+        if: matrix.config == 'Debug' && matrix.toolchain == 'msvc'
+        shell: bash
+        run: ctest --preset win-msvc-tests --output-on-failure
+
+      - name: Tests — GCC
+        if: matrix.config == 'Debug' && matrix.toolchain == 'gcc'
+        shell: msys2 {0}
+        run: ctest --preset win-mingw-gcc-tests --output-on-failure
+
+      - name: Tests — Clang
+        if: matrix.config == 'Debug' && matrix.toolchain == 'clang'
+        shell: bash
+        run: ctest --preset win-clangcl-tests --output-on-failure
 
       - name: Upload app artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-gcc-${{ matrix.config }}
-          path: build/gcc/app/${{ matrix.config }}/CppTemplateApp.exe
+          name: app-${{ matrix.toolchain }}-${{ matrix.config }}-windows
+          path: |
+            build/win-msvc/app/${{ matrix.config }}/
+            build/win-mingw-gcc/app/${{ matrix.config }}/
+            build/win-clangcl/app/${{ matrix.config }}/
+          if-no-files-found: ignore
+
+  # ---------------------- Linux: GCC + Clang ----------------------
+  linux:
+    name: Linux (${{ matrix.toolchain }} | ${{ matrix.config }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain: [ gcc, clang ]
+        config:    [ Debug, Release ]
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential ninja-build cmake clang
+
+      - name: Ensure exec bit
+        run: chmod +x scripts/*.sh
+
+      - name: Setup (vcpkg etc)
+        run: ./scripts/setup.sh
+
+      - name: Build — GCC
+        if: matrix.toolchain == 'gcc'
+        run: ./scripts/build.sh -t ${{ matrix.toolchain }} -c ${{ matrix.config }}
+
+      - name: Build — Clang
+        if: matrix.toolchain == 'clang'
+        run: ./scripts/build.sh -t ${{ matrix.toolchain }} -c ${{ matrix.config }}
+
+      - name: Tests — GCC
+        if: matrix.config == 'Debug' && matrix.toolchain == 'gcc'
+        run: ctest --preset linux-gcc-tests --output-on-failure
+
+      - name: Tests — Clang
+        if: matrix.config == 'Debug' && matrix.toolchain == 'clang'
+        run: ctest --preset linux-clang-tests --output-on-failure
+
+      - name: Upload app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-${{ matrix.toolchain }}-${{ matrix.config }}-linux
+          path: |
+            build/linux-gcc/app/${{ matrix.config }}/
+            build/linux-clang/app/${{ matrix.config }}/
+          if-no-files-found: ignore
+
+  # ---------------------- macOS: AppleClang ----------------------
+  macos:
+    name: macOS (${{ matrix.toolchain }} | ${{ matrix.config }})
+    runs-on: macos-14
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain: [ appleclang ]
+        config:    [ Debug, Release ]
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install deps
+        run: |
+          brew update
+          brew install ninja cmake
+          # For Homebrew GCC job
+          if [[ "${{ matrix.toolchain }}" == "gcc" ]]; then
+            brew install gcc
+          fi
+
+      - name: Ensure exec bit
+        run: chmod +x scripts/*.sh
+
+      - name: Setup (vcpkg etc)
+        run: ./scripts/setup.sh
+
+      - name: Build — GCC
+        if: matrix.toolchain == 'gcc'
+        run: ./scripts/build.sh -t ${{ matrix.toolchain }} -c ${{ matrix.config }}
+
+      - name: Build — AppleClang
+        if: matrix.toolchain == 'appleclang'
+        run: ./scripts/build.sh -t ${{ matrix.toolchain }} -c ${{ matrix.config }}
+
+      - name: Tests — AppleClang
+        if: matrix.config == 'Debug' && matrix.toolchain == 'appleclang'
+        run: ctest --preset mac-appleclang-tests --output-on-failure
+
+      - name: Upload app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-${{ matrix.toolchain }}-${{ matrix.config }}-macos
+          path: |
+            build/mac-appleclang/app/${{ matrix.config }}/
           if-no-files-found: ignore
