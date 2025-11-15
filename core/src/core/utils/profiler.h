@@ -43,6 +43,9 @@ class ScopedTimer {
     ScopedTimer(const ScopedTimer&) = delete;
     ScopedTimer& operator=(const ScopedTimer&) = delete;
 
+    ScopedTimer(ScopedTimer&&) = delete;
+    ScopedTimer& operator=(ScopedTimer&&) = delete;
+
   private:
     std::string m_name;
     std::chrono::steady_clock::time_point m_start;
@@ -54,14 +57,14 @@ decltype(auto) Profiler::exprTimer(std::string_view name, F&& f)
 {
     const auto start = clock::now();
     try {
-        if constexpr (std::is_void_v<std::invoke_result_t<F&>>) {
-            std::invoke(f);
+        if constexpr (std::is_void_v<std::invoke_result_t<F&&>>) {
+            std::invoke(std::forward<F>(f));
             const auto us = std::chrono::duration_cast<std::chrono::microseconds>(clock::now() - start).count();
             TB_CORE_TRACE("Profiler '{}' took {} us", name, us);
             return;
         }
         else {
-            auto ret = std::invoke(f);
+            auto ret = std::invoke(std::forward<F>(f));
             const auto us = std::chrono::duration_cast<std::chrono::microseconds>(clock::now() - start).count();
             TB_CORE_TRACE("Profiler '{}' took {} us", name, us);
             return ret;
