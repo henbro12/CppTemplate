@@ -17,10 +17,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Export compile_commands.json for IDEs (e.g. VS Code with clangd)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Output directories
-# set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-# set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+# Position independent code for all targets by default (static libs on *nix)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Enable warnings and strictness
 include(CheckCXXCompilerFlag)
