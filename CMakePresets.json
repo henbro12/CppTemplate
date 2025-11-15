@@ -46,6 +46,22 @@
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
     },
+    {
+      "name": "win-tidy",
+      "displayName": "Tidy | Windows clang-cl (no PCH, Debug)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/win-tidy",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" },
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang-cl",
+        "CMAKE_CXX_COMPILER": "clang-cl",
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/external/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-windows",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_DISABLE_PRECOMPILE_HEADERS": "ON",
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
 
     {
       "name": "linux-gcc",
@@ -72,8 +88,23 @@
         "CMAKE_CXX_COMPILER": "clang++",
         "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/external/vcpkg/scripts/buildsystems/vcpkg.cmake",
         "VCPKG_TARGET_TRIPLET": "x64-linux",
-        "CMAKE_CXX_FLAGS": "-fdiagnostics-color=always",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "linux-tidy",
+      "displayName": "Tidy | Linux Clang (no PCH, Debug)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/linux-tidy",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Linux" },
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/external/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-linux",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_DISABLE_PRECOMPILE_HEADERS": "ON",
+        "CMAKE_BUILD_TYPE": "Debug"
       }
     },
 
@@ -89,6 +120,22 @@
         "CMAKE_OSX_DEPLOYMENT_TARGET": "14.0",
         "CMAKE_OSX_ARCHITECTURES": "arm64",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "mac-tidy",
+      "displayName": "Tidy | macOS AppleClang (no PCH, Debug)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/mac-tidy",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Darwin" },
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/external/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "arm64-osx",
+        "CMAKE_OSX_DEPLOYMENT_TARGET": "14.0",
+        "CMAKE_OSX_ARCHITECTURES": "arm64",
+        "CMAKE_DISABLE_PRECOMPILE_HEADERS": "ON",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_BUILD_TYPE": "Debug"
       }
     }
   ],
@@ -116,7 +163,11 @@
 
     { "name": "mac-appleclang-Debug",         "configurePreset": "mac-appleclang", "configuration": "Debug" },
     { "name": "mac-appleclang-Release",       "configurePreset": "mac-appleclang", "configuration": "Release" },
-    { "name": "mac-appleclang-RelWithDebInfo","configurePreset": "mac-appleclang", "configuration": "RelWithDebInfo" }
+    { "name": "mac-appleclang-RelWithDebInfo","configurePreset": "mac-appleclang", "configuration": "RelWithDebInfo" },
+
+    { "name": "win-tidy-Debug",   "configurePreset": "win-tidy" },
+    { "name": "linux-tidy-Debug", "configurePreset": "linux-tidy" },
+    { "name": "mac-tidy-Debug",   "configurePreset": "mac-tidy" }
   ],
 
   "testPresets": [

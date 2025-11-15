@@ -18,17 +18,20 @@ jobs:
       - name: Install clang-tidy & clang-format
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang-tidy clang-format ninja-build cmake
+          sudo apt-get install -y clang-tidy clang-format build-essential ninja-build cmake clang
 
       - name: Ensure exec bit
         run: chmod +x scripts/*.sh
 
+      - name: Setup (vcpkg etc)
+        run: ./scripts/setup.sh
+        
       - name: Build project (clang, Debug)
-        run: ./scripts/build.sh -t clang -c Debug
+        run: ./scripts/build.sh -t tidy -c Debug
 
       - name: Run clang-tidy
         run: |
-          run-clang-tidy -p build/linux-clang core app tests
+          run-clang-tidy -p build/linux-tidy core app tests
 
       - name: Run clang-format (check only)
         run: |

@@ -3,9 +3,9 @@ set -euo pipefail
 
 # Usage:
 #   ./scripts/build.sh [-t TOOLCHAIN] [-c CONFIG] [--test]
-#   TOOLCHAIN (Windows): msvc | gcc | clang
-#   TOOLCHAIN (Linux)  : gcc  | clang
-#   TOOLCHAIN (macOS)  : appleclang
+#   TOOLCHAIN (Windows): msvc | gcc | clang | tidy
+#   TOOLCHAIN (Linux)  : gcc  | clang | tidy
+#   TOOLCHAIN (macOS)  : appleclang | tidy
 #   CONFIG: Debug | Release | RelWithDebInfo  (default: Debug)
 
 uname_s=$(uname -s || echo "")
@@ -45,9 +45,12 @@ case "$HOST_OS:$TOOLCHAIN" in
   Windows:msvc)        CONFIGURE_PRESET="win-msvc";       TEST_PRESET="win-msvc-tests" ;;
   Windows:gcc)         CONFIGURE_PRESET="win-mingw-gcc";  TEST_PRESET="win-mingw-gcc-tests" ;;
   Windows:clang)       CONFIGURE_PRESET="win-clangcl";    TEST_PRESET="win-clangcl-tests" ;;
+  Windows:tidy)        CONFIGURE_PRESET="win-tidy";;
   Linux:gcc)           CONFIGURE_PRESET="linux-gcc";      TEST_PRESET="linux-gcc-tests" ;;
   Linux:clang)         CONFIGURE_PRESET="linux-clang";    TEST_PRESET="linux-clang-tests" ;;
+  Linux:tidy)          CONFIGURE_PRESET="linux-tidy";;
   Darwin:appleclang)   CONFIGURE_PRESET="mac-appleclang"; TEST_PRESET="mac-appleclang-tests" ;;
+  Darwin:tidy)         CONFIGURE_PRESET="mac-tidy";;
   *)
     echo "[ERROR] Unsupported host/toolchain combo: $HOST_OS / $TOOLCHAIN"
     exit 1
