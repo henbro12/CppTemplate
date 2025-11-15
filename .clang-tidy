@@ -1,0 +1,62 @@
+# Clang-Tidy configuration for C++ project template
+# Docs: https://clang.llvm.org/extra/clang-tidy/
+
+Checks: >
+  clang-diagnostic-*,
+  clang-analyzer-*,
+  bugprone-*,
+  performance-*,
+  readability-*,
+  modernize-*,
+  portability-*,
+  cppcoreguidelines-*,
+  misc-unused-*,
+  misc-definitions-in-headers,
+  -modernize-use-trailing-return-type,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-owning-memory,
+  -cppcoreguidelines-macro-usage,
+  -readability-avoid-const-params-in-decls,
+  -readability-identifier-length,
+  -misc-include-cleaner
+
+# Treat all enabled diagnostics as errors in CI; you can relax locally.
+WarningsAsErrors: '*'
+
+# Only analyze headers that belong to this repo; skip external/ and system headers.
+HeaderFilterRegex: '^(.*core/|.*app/|.*tests/)'
+
+CheckOptions:
+  # Enforce 'override' on virtual overrides
+  - key: modernize-use-override.StrictMode
+    value: 'true'
+
+  # Suggest nullptr instead of 0 or NULL
+  - key: modernize-use-nullptr.NullMacros
+    value: 'NULL'
+
+  # Encourage range-based for loops (be a bit conservative)
+  - key: modernize-loop-convert.MinConfidence
+    value: 'reasonable'
+
+  # Identifier naming rules
+  - key: readability-identifier-naming.PrivateMemberCase
+    value: lower_case
+  - key: readability-identifier-naming.PrivateMemberPrefix
+    value: 'm_'
+
+  # Common naming conventions
+  - key: readability-identifier-naming.ClassCase
+    value: CamelCase
+  - key: readability-identifier-naming.MethodCase
+    value: camelBack
+  - key: readability-identifier-naming.FunctionCase
+    value: camelBack
+
+  # Limit cognitive complexity
+  - key: readability-function-cognitive-complexity.Threshold
+    value: '20'
+
+# Other settings
+FormatStyle: file
+UseColor: true

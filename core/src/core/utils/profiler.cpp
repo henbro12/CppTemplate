@@ -9,6 +9,7 @@
 #include "profiler.h"
 
 #include <mutex>
+#include <string>
 #include <unordered_map>
 
 #include "logger.h"
@@ -21,7 +22,7 @@ std::mutex Profiler::s_mutex{};
 
 void Profiler::startTimer(std::string_view name)
 {
-    std::lock_guard lk(s_mutex);
+    const std::lock_guard lk(s_mutex);
     s_starts[std::string{name}] = clock::now();
 }
 
@@ -30,7 +31,7 @@ void Profiler::endTimer(std::string_view name)
     const auto key = std::string{name};
     Profiler::clock::time_point start{};
     {
-        std::lock_guard lk(s_mutex);
+        const std::lock_guard lk(s_mutex);
         auto it = s_starts.find(key);
         if (it == s_starts.end()) {
             TB_CORE_WARN("Profiler end called for '{}' without a matching start", name);
@@ -43,12 +44,13 @@ void Profiler::endTimer(std::string_view name)
     TB_CORE_TRACE("Profiler '{}' took {} us", name, us);
 }
 
-long long Profiler::elapsed_us(std::string_view name)
+long long Profiler::elapsedUs(std::string_view name)
 {
-    std::lock_guard lk(s_mutex);
+    const std::lock_guard lk(s_mutex);
     auto it = s_starts.find(std::string{name});
-    if (it == s_starts.end())
+    if (it == s_starts.end()) {
         return 0;
+    }
     return std::chrono::duration_cast<std::chrono::microseconds>(clock::now() - it->second).count();
 }
 

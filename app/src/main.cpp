@@ -9,6 +9,8 @@
  * @author Henrico Brom <henricobrom@gmail.com>
  */
 
+#include <spdlog/common.h>
+
 #include "core/template/template.h"
 #include "core_inc.h"
 

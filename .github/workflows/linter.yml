@@ -1,0 +1,54 @@
+name: Linter
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint:
+    name: Lint (clang-tidy & clang-format)
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install clang-tidy & clang-format
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-tidy clang-format build-essential ninja-build cmake clang
+
+      - name: Ensure exec bit
+        run: chmod +x scripts/*.sh
+
+      - name: Setup (vcpkg etc)
+        run: ./scripts/setup.sh
+        
+      - name: Build project (clang, Debug)
+        run: ./scripts/build.sh -t tidy -c Debug
+
+      - name: Run clang-tidy
+        run: |
+          run-clang-tidy -p build/linux-tidy core app tests
+
+      - name: Run clang-format (check only)
+        run: |
+          clang-format --dry-run --Werror \
+            $(find core app tests -name '*.cpp' -o -name '*.hpp')
+
+  cppcheck:
+    name: cppcheck
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Run cppcheck
+        uses: deep5050/cppcheck-action@main
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}

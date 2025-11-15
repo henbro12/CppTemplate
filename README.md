@@ -131,6 +131,8 @@ Examples:
 ./scripts/run.sh -- --help
 ```
 
+✅ **Tip:** You can also open this project in **VS Code** and use CMake Tools’ “Configure Preset” and “Build Preset” selectors to build and run directly — no scripts required.
+
 ---
 
 ## 🧪 Running Tests
@@ -153,6 +155,51 @@ Example:
 ```bash
 ctest --preset linux-gcc-tests
 ```
+
+---
+
+## 🧹 Code Quality Checks
+
+The project includes built-in support for **clang-tidy** (static analysis) and **clang-format** (code style enforcement).
+These are automatically executed in CI, but you can also run them locally.
+
+### 🧠 Running clang-tidy
+
+`clang-tidy` performs static analysis and enforces modern C++ best practices using the rules defined in [`.clang-tidy`](./.clang-tidy).
+
+To run it manually:
+
+```bash
+# Create a tidy build (auto-selects correct toolchain per OS)
+./scripts/build.sh -t tidy
+
+# Run clang-tidy on all source files
+run-clang-tidy -p build/<win|linux|mac>-tidy core app tests
+```
+
+---
+
+### 🎨 Running clang-format
+
+`clang-format` ensures all source files follow the style defined in [`.clang-format`](./.clang-format).
+
+Check for formatting issues:
+
+```bash
+clang-format --dry-run --Werror \
+  $(find core app tests -name '*.cpp' -o -name '*.hpp')
+```
+
+Automatically fix formatting:
+
+```bash
+clang-format -i \
+  $(find core app tests -name '*.cpp' -o -name '*.hpp')
+```
+
+---
+
+✅ **Tip:** Run both tools before committing to ensure your code passes the **Linter CI** checks automatically.
 
 ---
 
@@ -217,16 +264,29 @@ Included configuration files:
 
 ## 🧱 Continuous Integration (CI)
 
-The provided GitHub Actions workflow:
-- Builds **MSVC**, **Clang-CL**, and **MinGW** on **Windows**
-- Builds **GCC** and **Clang** on **Linux**
-- Builds **AppleClang (arm64)** on **macOS**
-- Runs unit tests for all toolchains in `Debug`
-- Uploads app artifacts for every compiler/config combo
+The provided **GitHub Actions** workflows ensure that every commit and pull request is automatically verified across compilers, platforms, and code quality tools.
 
----
+### 🔧 Build & Test Workflow (`ci.yml`)
 
-✅ **Tip:** You can also open this project in **VS Code** and use CMake Tools’ “Configure Preset” and “Build Preset” selectors to build and run directly — no scripts required.
+This workflow:
+
+* Builds **MSVC**, **Clang-CL**, and **MinGW (GCC)** on **Windows**
+* Builds **GCC** and **Clang** on **Linux**
+* Builds **AppleClang (arm64)** on **macOS**
+* Runs **unit tests** for all toolchains in `Debug` mode
+* Uploads **application artifacts** for every compiler/configuration combination
+
+### 🧹 Linter Workflow (`linter.yml`)
+
+This workflow ensures code style and quality using multiple static analysis tools:
+
+| Tool             | Purpose         | Description                                                                                                                     |
+| ---------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| **clang-format** | Code style      | Checks source files against the `.clang-format` style; fails if formatting is incorrect (`--dry-run --Werror`).                 |
+| **clang-tidy**   | Static analysis | Runs code analysis on a dedicated **tidy build** (no PCH, Debug); enforces modern C++ best practices (`WarningsAsErrors: '*'`). |
+| **cppcheck**     | Static analysis | Performs an additional lightweight static code scan to catch issues missed by other tools.                                      |
+
+The **Linter CI** runs automatically on every **push** and **pull request**, ensuring consistent style, clean code, and no regressions before merging.
 
 ---
 

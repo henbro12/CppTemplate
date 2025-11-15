@@ -12,7 +12,10 @@
 
 #include "logger.h"
 
+#include <spdlog/common.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
+#include <string>
+#include <unordered_map>
 
 #include "utils.h"
 
@@ -34,7 +37,7 @@ void Logger::init()
     };
 
     create("Core", ANSI_GREY);
-    create("App", ANSI_GREY);
+    create("App", ANSI_WHITE);
 
     TB_CORE_INFO("Loggers initialized.");
 }
@@ -44,8 +47,9 @@ void Logger::shutdown()
     TB_CORE_INFO("Shutting down logger.");
 
     for (auto& [name, logger] : s_loggers) {
-        if (logger)
+        if (logger) {
             logger->flush();
+        }
         spdlog::drop(name);
     }
     s_loggers.clear();
@@ -55,8 +59,9 @@ void Logger::shutdown()
 void Logger::setLogLevel(spdlog::level::level_enum level)
 {
     for (auto& [name, logger] : s_loggers) {
-        if (logger)
+        if (logger) {
             logger->set_level(level);
+        }
     }
 
     TB_CORE_INFO("Log level set to {}", spdlog::level::to_string_view(level));
@@ -77,8 +82,9 @@ void Logger::setLogLevel(const std::string_view name, spdlog::level::level_enum 
 std::shared_ptr<spdlog::logger> Logger::get(const std::string& name)
 {
     auto it = s_loggers.find(name);
-    if (it != s_loggers.end() && it->second)
+    if (it != s_loggers.end() && it->second) {
         return it->second;
+    }
 
     // Create a new logger on demand to avoid returning nullptr
     auto logger = spdlog::stdout_color_mt(name);

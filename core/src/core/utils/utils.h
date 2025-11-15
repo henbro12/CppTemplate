@@ -34,5 +34,3 @@
 #define TEMPLATE_ASSERT(x, log_macro, ...)
 #define TEMPLATE_VERIFY(x, log_macro, ...)
 #endif
-
-#define TEMPLATE_BIND_EVENT_FN(fn) std::bind(&fn, this, std::placeholders::_1)

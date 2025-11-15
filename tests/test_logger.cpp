@@ -10,15 +10,17 @@
  */
 
 #include <catch2/catch_test_macros.hpp>
+#include <numbers>
 
-#include "core_inc.h"
+#include "core/utils/logger.h"
+
 
 TEST_CASE("Logger runs without crashing", "[logger]")
 {
     core::Logger::init();
 
     REQUIRE_NOTHROW(TB_CORE_TRACE("Trace step {}", 7));
-    REQUIRE_NOTHROW(TB_CORE_TRACE("Debug: {:.2f}", 3.14));
+    REQUIRE_NOTHROW(TB_CORE_TRACE("Debug: {:.2f}", std::numbers::pi));
     REQUIRE_NOTHROW(TB_CORE_TRACE("Info message: {}", 123));
     REQUIRE_NOTHROW(TB_CORE_TRACE("Warning: {}", "check this"));
     REQUIRE_NOTHROW(TB_CORE_TRACE("Error code {}", -1));
