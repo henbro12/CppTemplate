@@ -1,4 +1,4 @@
-name: CI
+name: Build
 
 on:
   pull_request:
@@ -17,7 +17,7 @@ env:
   VCPKG_ROOT: ${{ github.workspace }}/external/vcpkg
 
 jobs:
-  # ---------------------- Windows ----------------------
+  # ---------------------- Windows: MSVC + GCC + Clang ----------------------
   windows:
     name: Windows (${{ matrix.toolchain }} | ${{ matrix.config }})
     runs-on: windows-2022

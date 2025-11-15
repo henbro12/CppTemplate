@@ -24,7 +24,7 @@ class Profiler {
 
     static void startTimer(std::string_view name);
     static void endTimer(std::string_view name);
-    static long long elapsed_us(std::string_view name);
+    static long long elapsedUs(std::string_view name);
 
     template <class F>
     static decltype(auto) exprTimer(std::string_view name, F&& f);

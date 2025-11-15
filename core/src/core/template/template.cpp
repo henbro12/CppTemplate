@@ -11,8 +11,6 @@
 
 #include "core/template/template.h"
 
-#include <iostream>
-
 #include "core/utils/logger.h"
 
 namespace core {
