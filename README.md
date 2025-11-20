@@ -9,15 +9,15 @@ This template automatically detects your host OS and uses the matching compiler 
 
 ---
 
-## 💡 Coding Guidelines
+## Coding Guidelines
 
 We follow internal C++ guidelines based on [Jan Wilmans' C++ Guidelines](https://github.com/janwilmans/guidelines) (MIT licensed), with minor modifications.
 
-👉 See [guidelines.md](./guidelines.md) for the full list.
+See [guidelines.md](./guidelines.md) for the full list.
 
 ---
 
-## 🧩 Cross-Platform Overview
+## Cross-Platform Overview
 
 | Operating System | Default Toolchain | Other Supported Toolchains |
 |------------------|------------------|-----------------------------|
@@ -25,18 +25,18 @@ We follow internal C++ guidelines based on [Jan Wilmans' C++ Guidelines](https:/
 | **Linux** | GCC | LLVM **Clang** |
 | **macOS (Apple Silicon)** | AppleClang (`clang`) | - |
 
-> 🧠 The `build.sh` and `run.sh` scripts **automatically detect your OS** and select the correct compiler preset.
+> The `build.sh` and `run.sh` scripts **automatically detect your OS** and select the correct compiler preset.
 > You can override it manually with `-t <toolchain>` if you want to test a specific compiler.
 
 ---
 
-## 🛠️ Getting Started
+## Getting Started
 
 ### 1. Install dependencies
 
 Make sure the following tools are installed on your system:
 
-#### 🪟 Windows
+#### Windows
 - **Visual Studio Build Tools 2022** (for MSVC)
 - **LLVM/Clang** *(optional)* – for Clang builds
 - **MSYS2** *(optional)* – for GCC/MinGW builds
@@ -44,13 +44,13 @@ Make sure the following tools are installed on your system:
 - **Ninja**
 - **Git**
 
-#### 🐧 Linux
+#### Linux
 - **GCC** or **Clang**
 - **CMake ≥ 3.25**
 - **Ninja**
 - **Git**
 
-#### 🍎 macOS
+#### MacOS
 - **Xcode Command Line Tools** (provides AppleClang)
 - **CMake ≥ 3.25**
 - **Ninja**
@@ -67,7 +67,7 @@ This bootstraps vcpkg under `external/vcpkg` and installs required dependencies 
 
 ---
 
-## ⚙️ Building the Project
+## Building the Project
 
 ### Supported Toolchains
 
@@ -87,7 +87,7 @@ This bootstraps vcpkg under `external/vcpkg` and installs required dependencies 
 
 ---
 
-### 🧪 Build with Scripts (Recommended)
+### Build with Scripts (Recommended)
 
 The build scripts automatically detect your OS and compiler:
 
@@ -110,7 +110,7 @@ Examples:
 
 ---
 
-## ▶️ Running the Application
+## Running the Application
 
 Use the run script to automatically build (if needed) and execute the app:
 
@@ -131,11 +131,11 @@ Examples:
 ./scripts/run.sh -- --help
 ```
 
-✅ **Tip:** You can also open this project in **VS Code** and use CMake Tools’ “Configure Preset” and “Build Preset” selectors to build and run directly — no scripts required.
+**Tip:** You can also open this project in **VS Code** and use CMake Tools’ “Configure Preset” and “Build Preset” selectors to build and run directly — no scripts required.
 
 ---
 
-## 🧪 Running Tests
+## Running Tests
 
 Unit tests use [Catch2](https://github.com/catchorg/Catch2) and are automatically built when `BUILD_TESTING` is enabled.
 
@@ -158,12 +158,12 @@ ctest --preset linux-gcc-tests
 
 ---
 
-## 🧹 Code Quality Checks
+## Code Quality Checks
 
 The project includes built-in support for **clang-tidy** (static analysis) and **clang-format** (code style enforcement).
 These are automatically executed in CI, but you can also run them locally.
 
-### 🧠 Running clang-tidy
+### Running clang-tidy
 
 `clang-tidy` performs static analysis and enforces modern C++ best practices using the rules defined in [`.clang-tidy`](./.clang-tidy).
 
@@ -179,7 +179,7 @@ run-clang-tidy -p build/<win|linux|mac>-tidy core app tests
 
 ---
 
-### 🎨 Running clang-format
+### Running clang-format
 
 `clang-format` ensures all source files follow the style defined in [`.clang-format`](./.clang-format).
 
@@ -199,11 +199,11 @@ clang-format -i \
 
 ---
 
-✅ **Tip:** Run both tools before committing to ensure your code passes the **Linter CI** checks automatically.
+**Tip:** Run both tools before committing to ensure your code passes the **Linter CI** checks automatically.
 
 ---
 
-## 📁 Output Structure
+## Output Structure
 
 All builds are separated by toolchain and configuration to prevent conflicts:
 
@@ -231,7 +231,7 @@ build/
 
 ---
 
-## 📦 Dependencies
+## Dependencies
 
 Dependencies are managed through **vcpkg** and defined in [`vcpkg.json`](./vcpkg.json):
 
@@ -242,7 +242,7 @@ Each toolchain has an isolated `vcpkg_installed` directory under its build folde
 
 ---
 
-## 🧾 Using This Repository as a Template
+## Using This Repository as a Template
 
 If you want to start a new project from this template:
 
@@ -262,11 +262,11 @@ Included configuration files:
 
 ---
 
-## 🧱 Continuous Integration (CI)
+## Continuous Integration (CI)
 
 The provided **GitHub Actions** workflows ensure that every commit and pull request is automatically verified across compilers, platforms, and code quality tools.
 
-### 🔧 Build & Test Workflow (`ci.yml`)
+### Build & Test Workflow (`ci.yml`)
 
 This workflow:
 
@@ -276,7 +276,7 @@ This workflow:
 * Runs **unit tests** for all toolchains in `Debug` mode
 * Uploads **application artifacts** for every compiler/configuration combination
 
-### 🧹 Linter Workflow (`linter.yml`)
+### Linter Workflow (`linter.yml`)
 
 This workflow ensures code style and quality using multiple static analysis tools:
 
@@ -290,7 +290,7 @@ The **Linter CI** runs automatically on every **push** and **pull request**, ens
 
 ---
 
-## 📜 License
+## License
 
 This project is licensed under the [MIT License](./LICENSE).
 
