@@ -1,5 +1,5 @@
 /**
- * SPDX-License-Identifier: Apache-2.0
+ * SPDX-License-Identifier: MIT
  *
  * @file profiler.h
  * @brief Simple static profiler to measure named code sections.
@@ -12,7 +12,12 @@
 #pragma once
 
 #include <chrono>
+#include <functional>
+#include <mutex>
 #include <string>
+#include <string_view>
+#include <type_traits>
+#include <unordered_map>
 
 #include "core/utils/logger.h"
 
@@ -60,19 +65,19 @@ decltype(auto) Profiler::exprTimer(std::string_view name, F&& f)
         if constexpr (std::is_void_v<std::invoke_result_t<F&&>>) {
             std::invoke(std::forward<F>(f));
             const auto us = std::chrono::duration_cast<std::chrono::microseconds>(clock::now() - start).count();
-            TB_CORE_TRACE("Profiler '{}' took {} us", name, us);
+            TEMPLATE_CORE_TRACE("Profiler '{}' took {} us", name, us);
             return;
         }
         else {
             auto ret = std::invoke(std::forward<F>(f));
             const auto us = std::chrono::duration_cast<std::chrono::microseconds>(clock::now() - start).count();
-            TB_CORE_TRACE("Profiler '{}' took {} us", name, us);
+            TEMPLATE_CORE_TRACE("Profiler '{}' took {} us", name, us);
             return ret;
         }
     }
     catch (...) {
         const auto us = std::chrono::duration_cast<std::chrono::microseconds>(clock::now() - start).count();
-        TB_CORE_TRACE("Profiler '{}' threw after {} us", name, us);
+        TEMPLATE_CORE_TRACE("Profiler '{}' threw after {} us", name, us);
         throw;
     }
 }
@@ -80,7 +85,7 @@ decltype(auto) Profiler::exprTimer(std::string_view name, F&& f)
 } // namespace core::utils
 
 // Convenience macros: enable by defining ENABLE_PROFILER (e.g., in Debug builds)
-#if !defined(ENABLE_PROFILER)
+#ifndef ENABLE_PROFILER
 #if defined(_DEBUG) || (defined(DEBUG) && DEBUG)
 #define ENABLE_PROFILER 1
 #else
@@ -99,9 +104,10 @@ decltype(auto) Profiler::exprTimer(std::string_view name, F&& f)
 #define CONCAT_SCOPE_TIMER_INTERNAL(line) scope_timer_##line
 #define CONCAT_SCOPE_TIMER(line) CONCAT_SCOPE_TIMER_INTERNAL(line)
 #else
+// Disabled variants keep the same signatures, and PROFILE_CALL/PROFILE_CALL_V still evaluate `expr`
 #define PROFILE_START(name) ((void)0)
 #define PROFILE_END(name) ((void)0)
-#define PROFILE_CALL(name) ((void)0)
-#define PROFILE_CALL_V(name) ((void)0)
+#define PROFILE_CALL(name, expr) (expr)
+#define PROFILE_CALL_V(name, expr) ((void)(expr))
 #define PROFILE_SCOPE(name) ((void)0)
 #endif

@@ -18,7 +18,8 @@ Checks: >
   -cppcoreguidelines-macro-usage,
   -readability-avoid-const-params-in-decls,
   -readability-identifier-length,
-  -misc-include-cleaner
+  -misc-include-cleaner,
+  -portability-avoid-pragma-once
 
 # Treat all enabled diagnostics as errors in CI; you can relax locally.
 WarningsAsErrors: '*'
@@ -38,6 +39,10 @@ CheckOptions:
   # Encourage range-based for loops (be a bit conservative)
   - key: modernize-loop-convert.MinConfidence
     value: 'reasonable'
+
+  # do { ... } while (0) is the idiomatic way to write statement-like macros
+  - key: cppcoreguidelines-avoid-do-while.IgnoreMacros
+    value: 'true'
 
   # Identifier naming rules
   - key: readability-identifier-naming.PrivateMemberCase

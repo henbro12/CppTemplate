@@ -1,7 +1,7 @@
 /**
- * SPDX-License-Identifier: Apache-2.0
+ * SPDX-License-Identifier: MIT
  *
- * @file template.hpp
+ * @file template.h
  * @brief Example of a core module.
  * @date 2025-06-27
  *

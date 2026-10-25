@@ -1,5 +1,5 @@
 /**
- * SPDX-License-Identifier: Apache-2.0
+ * SPDX-License-Identifier: MIT
  *
  * @file main.cpp
  * @brief Initial starting point for the application.
@@ -22,7 +22,7 @@ int main(int argc, char** argv)
     core::Logger::init();
     core::Logger::setLogLevel(spdlog::level::trace);
 
-    TB_APP_INFO("Template Application initialized successfully.");
+    TEMPLATE_APP_INFO("Template Application initialized successfully.");
 
     core::boot();
 

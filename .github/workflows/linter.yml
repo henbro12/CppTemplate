@@ -36,7 +36,7 @@ jobs:
       - name: Run clang-format (check only)
         run: |
           clang-format --dry-run --Werror \
-            $(find core app tests -name '*.cpp' -o -name '*.hpp')
+            $(find core app tests \( -name '*.cpp' -o -name '*.h' -o -name '*.hpp' \))
 
   cppcheck:
     name: cppcheck
@@ -49,6 +49,6 @@ jobs:
           submodules: recursive
 
       - name: Run cppcheck
-        uses: deep5050/cppcheck-action@main
+        uses: deep5050/cppcheck-action@a4dcbb4f03f99ac4fbe141dbefd199ff64fc4622 # main as of 2026-10-25
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}

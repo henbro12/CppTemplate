@@ -90,6 +90,12 @@ fi
 
 echo "[INFO] Running: $EXE_PATH ${APP_ARGS[*]:-}"
 echo "----------------------------------------"
-"$EXE_PATH" "${APP_ARGS[@]:-}"
+# Branch instead of "${APP_ARGS[@]:-}", which passes one empty argument when there are none
+# (and plain "${APP_ARGS[@]}" trips `set -u` on macOS' bash 3.2 when the array is empty)
+if [[ ${#APP_ARGS[@]} -gt 0 ]]; then
+  "$EXE_PATH" "${APP_ARGS[@]}"
+else
+  "$EXE_PATH"
+fi
 echo "----------------------------------------"
 echo "[SUCCESS] Execution complete."

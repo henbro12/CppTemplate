@@ -1,8 +1,8 @@
 /**
- * SPDX-License-Identifier: Apache-2.0
+ * SPDX-License-Identifier: MIT
  *
- * @file common_inc.h
- * @brief Used by applications to access the Titan Common functionality.
+ * @file core_inc.h
+ * @brief Umbrella header used by applications to access the core functionality.
  * @date 2025-06-28
  *
  * @copyright (C) 2025 Henbro12

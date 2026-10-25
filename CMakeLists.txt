@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: MIT
 # @copyright (C) 2025 Henbro12
 
 cmake_minimum_required(VERSION 3.25)
@@ -20,9 +20,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Position independent code for all targets by default (static libs on *nix)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-# Enable warnings and strictness
-include(CheckCXXCompilerFlag)
+# Enable warnings and strictness (treated as errors; override locally with `cmake --compile-no-warning-as-error`)
 function(enable_common_warnings target)
+  set_target_properties(${target} PROPERTIES COMPILE_WARNING_AS_ERROR ON)
   if (MSVC)
     target_compile_options(${target} PRIVATE /W4 /permissive-)
   else()

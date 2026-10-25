@@ -1,5 +1,5 @@
 /**
- * SPDX-License-Identifier: Apache-2.0
+ * SPDX-License-Identifier: MIT
  *
  * @file pch.h
  * @brief Precompiled header for the engine, used to speed up compilation by including frequently used headers.
@@ -12,22 +12,20 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
+#include <filesystem>
+#include <fstream>
 #include <functional>
+#include <iostream>
+#include <map>
 #include <memory>
 #include <numeric>
 #include <ranges>
-#include <utility>
-#include <variant>
-
-#include <array>
-#include <map>
+#include <sstream>
 #include <string>
 #include <typeindex>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
+#include <variant>
 #include <vector>
-
-#include <filesystem>
-#include <fstream>
-#include <iostream>
-#include <sstream>

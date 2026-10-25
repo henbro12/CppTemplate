@@ -2,6 +2,10 @@
 set -euo pipefail
 
 VCPKG_DIR="external/vcpkg"
+VCPKG_URL="https://github.com/microsoft/vcpkg.git"
+# Pinned vcpkg release (2026.10.16) so dependency versions are reproducible.
+# Keep in sync with "builtin-baseline" in vcpkg.json when upgrading.
+VCPKG_COMMIT="9eec002df1cd109f8f104cd966a763daf9751489"
 
 # ---------- Helpers ----------
 install_ninja_if_missing_unix() {
@@ -43,10 +47,19 @@ if [[ "$PLATFORM" != "windows" ]]; then
   fi
 fi
 
-# ---------- vcpkg clone ----------
+# ---------- vcpkg checkout (pinned) ----------
 if [ ! -d "$VCPKG_DIR/.git" ]; then
-  echo "[INFO] Cloning vcpkg into $VCPKG_DIR..."
-  git clone --depth 1 https://github.com/microsoft/vcpkg.git "$VCPKG_DIR"
+  echo "[INFO] Initialising vcpkg repository in $VCPKG_DIR..."
+  git init -q "$VCPKG_DIR"
+  git -C "$VCPKG_DIR" remote add origin "$VCPKG_URL"
+fi
+
+if [ "$(git -C "$VCPKG_DIR" rev-parse HEAD 2>/dev/null || true)" != "$VCPKG_COMMIT" ]; then
+  echo "[INFO] Checking out vcpkg $VCPKG_COMMIT..."
+  git -C "$VCPKG_DIR" fetch --depth 1 origin "$VCPKG_COMMIT"
+  git -C "$VCPKG_DIR" checkout -q --detach FETCH_HEAD
+  # Force a re-bootstrap so the vcpkg tool matches the checked-out scripts
+  rm -f "$VCPKG_DIR/vcpkg" "$VCPKG_DIR/vcpkg.exe"
 fi
 
 # ---------- vcpkg bootstrap ----------
@@ -69,6 +82,6 @@ echo ""
 echo "[SUCCESS] Setup complete."
 echo ""
 echo "Build & Run Examples:"
-echo "  ./scripts/build.sh                 # uses OS default toolchain"
-echo "  ./scripts/build.sh clang Release   # pick toolchain+config"
-echo "  ./scripts/run.sh -- --help         # run app with args"
+echo "  ./scripts/build.sh                        # uses OS default toolchain"
+echo "  ./scripts/build.sh -t clang -c Release    # pick toolchain+config"
+echo "  ./scripts/run.sh -- --help                # run app with args"

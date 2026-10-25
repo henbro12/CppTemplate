@@ -57,6 +57,28 @@ case "$HOST_OS:$TOOLCHAIN" in
     ;;
 esac
 
+case "$CONFIG" in
+  Debug|Release|RelWithDebInfo) ;;
+  *) echo "[ERROR] Unsupported config: $CONFIG (expected Debug | Release | RelWithDebInfo)"; exit 1 ;;
+esac
+
+# Tidy presets are single-config Debug builds without tests
+if [[ "$TOOLCHAIN" == "tidy" ]]; then
+  if [[ "$CONFIG" != "Debug" ]]; then
+    echo "[ERROR] The tidy toolchain only supports the Debug config"
+    exit 1
+  fi
+  if [[ "$RUN_TESTS" == "true" ]]; then
+    echo "[ERROR] --test is not supported with the tidy toolchain"
+    exit 1
+  fi
+fi
+
+if [[ "$RUN_TESTS" == "true" && "$CONFIG" != "Debug" ]]; then
+  echo "[ERROR] --test is only supported with the Debug config (test presets are Debug-only)"
+  exit 1
+fi
+
 BUILD_PRESET="${CONFIGURE_PRESET}-${CONFIG}"
 
 echo "[INFO] Host OS          : $HOST_OS"
@@ -70,7 +92,7 @@ cmake --build --preset "$BUILD_PRESET"
 
 echo "[SUCCESS] Build complete."
 
-if [[ "$RUN_TESTS" == "true" && "$CONFIG" == "Debug" ]]; then
+if [[ "$RUN_TESTS" == "true" ]]; then
   echo "[INFO] Running tests: $TEST_PRESET"
   ctest --preset "$TEST_PRESET" --output-on-failure
   echo "[SUCCESS] Tests complete."

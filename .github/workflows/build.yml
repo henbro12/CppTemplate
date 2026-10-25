@@ -187,20 +187,12 @@ jobs:
         run: |
           brew update
           brew install ninja cmake
-          # For Homebrew GCC job
-          if [[ "${{ matrix.toolchain }}" == "gcc" ]]; then
-            brew install gcc
-          fi
 
       - name: Ensure exec bit
         run: chmod +x scripts/*.sh
 
       - name: Setup (vcpkg etc)
         run: ./scripts/setup.sh
-
-      - name: Build — GCC
-        if: matrix.toolchain == 'gcc'
-        run: ./scripts/build.sh -t ${{ matrix.toolchain }} -c ${{ matrix.config }}
 
       - name: Build — AppleClang
         if: matrix.toolchain == 'appleclang'

@@ -1,5 +1,5 @@
 /**
- * SPDX-License-Identifier: Apache-2.0
+ * SPDX-License-Identifier: MIT
  *
  * @file template.cpp
  * @brief Example of a core module.
@@ -18,7 +18,7 @@ namespace core {
 
 void boot()
 {
-    TB_CORE_INFO("Boot sequence initialized.");
+    TEMPLATE_CORE_INFO("Boot sequence initialized.");
 }
 
 } // namespace core

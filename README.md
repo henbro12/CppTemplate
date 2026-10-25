@@ -63,7 +63,9 @@ Then run once to set up **vcpkg** and dependencies:
 ./scripts/setup.sh
 ```
 
-This bootstraps vcpkg under `external/vcpkg` and installs required dependencies defined in `vcpkg.json`.
+This checks out a pinned vcpkg release under `external/vcpkg` and bootstraps it. Dependencies defined in `vcpkg.json` are installed automatically on the first configure.
+
+The vcpkg commit in `scripts/setup.sh` (`VCPKG_COMMIT`) and the `builtin-baseline` in `vcpkg.json` pin dependency versions; update both together to upgrade.
 
 ---
 
@@ -85,6 +87,9 @@ This bootstraps vcpkg under `external/vcpkg` and installs required dependencies 
 - `Release` — optimized build, assertions disabled
 - `RelWithDebInfo` — optimized with debug info
 
+> Compiler warnings are treated as errors for the project's own targets (`COMPILE_WARNING_AS_ERROR`).
+> To relax this locally, configure with `cmake --preset <preset> --compile-no-warning-as-error`.
+
 ---
 
 ### Build with Scripts (Recommended)
@@ -104,7 +109,7 @@ Examples:
 # Explicitly build MSVC Release
 ./scripts/build.sh -t msvc -c Release
 
-# Build and run unit tests (Debug only)
+# Build and run unit tests (Debug only; tidy builds have no tests)
 ./scripts/build.sh --test
 ```
 
@@ -125,7 +130,7 @@ Examples:
 ./scripts/run.sh
 
 # Run Clang-CL build in Release mode
-./scripts/run.sh -t clangcl -c Release
+./scripts/run.sh -t clang -c Release
 
 # Pass arguments to the app
 ./scripts/run.sh -- --help
@@ -187,14 +192,14 @@ Check for formatting issues:
 
 ```bash
 clang-format --dry-run --Werror \
-  $(find core app tests -name '*.cpp' -o -name '*.hpp')
+  $(find core app tests \( -name '*.cpp' -o -name '*.h' -o -name '*.hpp' \))
 ```
 
 Automatically fix formatting:
 
 ```bash
 clang-format -i \
-  $(find core app tests -name '*.cpp' -o -name '*.hpp')
+  $(find core app tests \( -name '*.cpp' -o -name '*.h' -o -name '*.hpp' \))
 ```
 
 ---
@@ -257,7 +262,8 @@ If you want to start a new project from this template:
 Included configuration files:
 - `.clang-format` — C++ code style
 - `.editorconfig` — editor settings
-- `.github/workflows/ci.yml` — GitHub Actions CI for all platforms
+- `.github/workflows/build.yml` — GitHub Actions build & test CI for all platforms
+- `.github/workflows/linter.yml` — clang-format, clang-tidy and cppcheck checks
 - `CMakePresets.json` — unified build configurations
 
 ---
@@ -266,7 +272,7 @@ Included configuration files:
 
 The provided **GitHub Actions** workflows ensure that every commit and pull request is automatically verified across compilers, platforms, and code quality tools.
 
-### Build & Test Workflow (`ci.yml`)
+### Build & Test Workflow (`build.yml`)
 
 This workflow:
 

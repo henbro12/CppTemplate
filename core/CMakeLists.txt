@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: MIT
 # @copyright (C) 2025 Henbro12
 
 add_library(CppTemplateCore STATIC
@@ -21,11 +21,10 @@ target_precompile_headers(CppTemplateCore PRIVATE src/pch.h)
 
 enable_common_warnings(CppTemplateCore)
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  target_compile_definitions(CppTemplateCore PUBLIC
-    TEMPLATE_ENABLE_ASSERTS
-  )
-endif()
+# Generator expression so this also works with multi-config generators (Ninja Multi-Config, Visual Studio)
+target_compile_definitions(CppTemplateCore PUBLIC
+  $<$<CONFIG:Debug>:TEMPLATE_ENABLE_ASSERTS>
+)
 
 target_compile_definitions(CppTemplateCore PRIVATE
   $<$<CONFIG:Debug>:_DEBUG;DEBUG>

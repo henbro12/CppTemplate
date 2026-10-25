@@ -8,10 +8,22 @@
 			"targets": [
 				"all"
 			],
-			"preset": "debug",
-			"group": "build",
+			"preset": "${command:cmake.activeBuildPresetName}",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
 			"problemMatcher": [],
-			"detail": "CMake template build task"
+			"detail": "Build the active CMake build preset"
+		},
+		{
+			"type": "cmake",
+			"label": "CMake: test",
+			"command": "test",
+			"preset": "${command:cmake.activeTestPresetName}",
+			"group": "test",
+			"problemMatcher": [],
+			"detail": "Run the active CMake test preset"
 		}
 	]
 }

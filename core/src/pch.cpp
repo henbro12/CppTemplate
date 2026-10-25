@@ -1,5 +1,5 @@
 /**
- * SPDX-License-Identifier: Apache-2.0
+ * SPDX-License-Identifier: MIT
  *
  * @file pch.cpp
  * @brief Precompiled header for the engine, used to speed up compilation by including frequently used headers.
