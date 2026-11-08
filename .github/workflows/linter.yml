@@ -15,8 +15,8 @@ concurrency:
 
 env:
   # Pinned LLVM version, so formatting and tidy results don't change when the runner image updates.
-  # Use the same major version locally (see README) to get identical clang-format output.
-  LLVM_VERSION: 18
+  # Same version as build.yml; use it locally too (see docs/code-quality.md) for identical results.
+  LLVM_VERSION: 20
   VCPKG_BINARY_SOURCES: clear;files,${{ github.workspace }}/.vcpkg-cache,readwrite
 
 jobs:
@@ -28,11 +28,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install clang-tidy & clang-format
+      - name: Install build tools & cppcheck
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential ninja-build cmake clang \
-            clang-tidy-${LLVM_VERSION} clang-format-${LLVM_VERSION} cppcheck
+          sudo apt-get install -y build-essential ninja-build cmake cppcheck
+
+      - name: Install LLVM ${{ env.LLVM_VERSION }} (clang, clang-tidy, clang-format)
+        run: .github/scripts/install-llvm.sh "$LLVM_VERSION"
 
       - name: Run clang-format (check only)
         run: |

@@ -23,3 +23,8 @@ the vcpkg pin changes.
 
 One job that checks formatting, builds the tidy preset, then runs clang-tidy and cppcheck on it. Each tool fails the run on
 any finding. See [code-quality.md](code-quality.md) to run the same checks locally.
+
+## LLVM version
+
+The Clang jobs use LLVM 20 (`LLVM_VERSION` in both workflows): on Linux from the official [apt.llvm.org](https://apt.llvm.org)
+repository via [`.github/scripts/install-llvm.sh`](../.github/scripts/install-llvm.sh), on Windows via Chocolatey.

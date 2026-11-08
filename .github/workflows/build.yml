@@ -18,6 +18,8 @@ concurrency:
 # and manual runs (workflow_dispatch), which always use the full matrix.
 
 env:
+  # LLVM major version for clang-cl, Linux Clang and the sanitizer build (same as linter.yml and local development)
+  LLVM_VERSION: 20
   # vcpkg binary cache: built dependencies are stored here and persisted between runs with actions/cache
   VCPKG_BINARY_SOURCES: clear;files,${{ github.workspace }}/.vcpkg-cache,readwrite
 
@@ -52,6 +54,18 @@ jobs:
       - name: Set up MSVC environment
         if: matrix.toolchain != 'gcc'
         uses: ilammy/msvc-dev-cmd@v1
+
+      # The runner image ships whatever LLVM is current; pin it so clang-cl matches the other Clang builds
+      - name: Install LLVM ${{ env.LLVM_VERSION }} (clang-cl)
+        if: matrix.toolchain == 'clang'
+        shell: bash
+        run: |
+          choco upgrade llvm --version=20.1.8 --allow-downgrade -y --no-progress
+          version=$(clang-cl --version | sed -nE 's/.*version ([0-9]+)\..*/\1/p' | head -1)
+          if [[ "$version" != "$LLVM_VERSION" ]]; then
+            echo "::error::Expected clang-cl $LLVM_VERSION but found $version ($(command -v clang-cl))"
+            exit 1
+          fi
 
       - name: Remove preinstalled MSYS2 (if present)
         if: matrix.toolchain == 'gcc'
@@ -126,7 +140,11 @@ jobs:
       - name: Install deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential ninja-build cmake clang
+          sudo apt-get install -y build-essential ninja-build cmake
+
+      - name: Install LLVM ${{ env.LLVM_VERSION }}
+        if: matrix.toolchain != 'gcc'
+        run: .github/scripts/install-llvm.sh "$LLVM_VERSION"
 
       - name: Setup (vcpkg etc)
         run: ./scripts/setup.sh
@@ -145,7 +163,7 @@ jobs:
   # ---------------------- macOS: AppleClang ----------------------
   macos:
     name: macOS (${{ matrix.toolchain }} | ${{ matrix.config }})
-    runs-on: macos-14
+    runs-on: macos-15
     strategy:
       fail-fast: false
       matrix:

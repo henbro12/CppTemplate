@@ -25,6 +25,7 @@ the scripts from Git Bash.
 ./scripts/build.sh             # build with your OS's default toolchain (Debug)
 ./scripts/build.sh --test      # build and run the unit tests
 ./scripts/run.sh               # build and run the app
+./scripts/check.sh             # run all CI checks locally before pushing
 ```
 
 Pick another toolchain or configuration with `-t` and `-c`:
@@ -57,6 +58,7 @@ You can also open the folder in **VS Code** and pick a configure/build preset in
 - [CI](docs/ci.md): the GitHub Actions workflows
 - [Core library](docs/core.md): logging, asserts, profiling and version info
 - [Coding guidelines](guidelines.md): based on [Jan Wilmans' C++ Guidelines](https://github.com/janwilmans/guidelines)
+- [AGENTS.md](AGENTS.md): instructions for AI coding agents (read automatically by most AI coding tools)
 
 ---
 

@@ -1,10 +1,20 @@
 # Code Quality
 
-The [Linter CI](ci.md) runs clang-format, clang-tidy and cppcheck, and fails on any finding. Run them locally before
-pushing to avoid surprises.
+The [Linter CI](ci.md) runs clang-format, clang-tidy and cppcheck, and fails on any finding. To run all of them plus
+the Debug and Release tests locally:
 
-CI uses **LLVM 18** (`clang-format-18`, `clang-tidy-18`). Use the same major version locally for identical results,
-e.g. `pip install clang-format==18.1.8`.
+```bash
+./scripts/check.sh           # everything (on Windows: from a Developer shell for VS 2022)
+./scripts/check.sh --quick   # formatting + Debug tests only
+```
+
+It runs every step even when one fails and prints a summary. Steps whose tool isn't installed are skipped with a
+warning; add `--strict` to treat that as a failure. The sections below show how to run each tool on its own.
+
+The project uses **LLVM 20** everywhere it controls the version: clang-format, clang-tidy, the Linux Clang and
+sanitizer builds, and clang-cl on Windows. CI installs it explicitly (`LLVM_VERSION` in the workflows). Use LLVM 20
+locally too, e.g. from [releases.llvm.org](https://releases.llvm.org) or `pip install clang-format==20.1.8`.
+AppleClang on macOS follows the installed Xcode and can't be pinned this way.
 
 ## clang-format
 

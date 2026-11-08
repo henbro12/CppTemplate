@@ -7,7 +7,7 @@ your OS, but you can use the presets directly with `cmake`/`ctest` or from your 
 
 | | Windows | Linux | macOS |
 |---|---|---|---|
-| Compiler | Visual Studio Build Tools 2022; optional LLVM (clang-cl), MSYS2 (MinGW GCC) | GCC or Clang | Xcode Command Line Tools |
+| Compiler | Visual Studio Build Tools 2022; optional LLVM 20 (clang-cl), MSYS2 (MinGW GCC) | GCC or Clang 20 | Xcode Command Line Tools |
 | Tools | CMake ≥ 3.25, Ninja, Git (Git Bash runs the scripts) | CMake ≥ 3.25, Ninja, Git | CMake ≥ 3.25, Ninja, Git |
 
 ### Windows shells
@@ -66,6 +66,7 @@ Warnings are errors for the project's own targets. To relax this locally:
 ```
 
 Both default to your OS's toolchain and `Debug`, and work from any directory. `run.sh` builds first.
+[`check.sh`](code-quality.md) runs the full set of CI checks.
 
 ## Linking
 
