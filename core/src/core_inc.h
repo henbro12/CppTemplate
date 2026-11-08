@@ -11,5 +11,8 @@
 
 #pragma once
 
+#include "core/template/template.h"
 #include "core/utils/logger.h"
+#include "core/utils/profiler.h"
 #include "core/utils/utils.h"
+#include "core/version.h"

@@ -4,10 +4,14 @@
  * @file profiler.cpp
  * @brief Implementation of lightweight profiler utilities.
  * @date 2025-10-08
+ *
+ * @copyright (C) 2025 Henbro12
+ * @author Henrico Brom <henricobrom@gmail.com>
  */
 
 #include "profiler.h"
 
+#include <exception>
 #include <mutex>
 #include <string>
 #include <unordered_map>
@@ -55,12 +59,20 @@ long long Profiler::elapsedUs(std::string_view name)
 }
 
 
-ScopedTimer::ScopedTimer(std::string_view name) : m_name{name}, m_start{std::chrono::steady_clock::now()} {}
+ScopedTimer::ScopedTimer(std::string_view name) :
+    m_name{name}, m_start{Profiler::clock::now()}, m_uncaught_exceptions{std::uncaught_exceptions()}
+{
+}
 
 ScopedTimer::~ScopedTimer()
 {
-    const auto us = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - m_start).count();
-    TEMPLATE_CORE_TRACE("Profiler '{}' took {} us", m_name, us);
+    const auto us = std::chrono::duration_cast<std::chrono::microseconds>(Profiler::clock::now() - m_start).count();
+    if (std::uncaught_exceptions() > m_uncaught_exceptions) {
+        TEMPLATE_CORE_TRACE("Profiler '{}' threw after {} us", m_name, us);
+    }
+    else {
+        TEMPLATE_CORE_TRACE("Profiler '{}' took {} us", m_name, us);
+    }
 }
 
 } // namespace core::utils

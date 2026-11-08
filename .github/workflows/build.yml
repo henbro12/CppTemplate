@@ -13,8 +13,13 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Pull requests run a reduced matrix: every toolchain in Debug, plus one Release job per OS for the
+# Release-only code paths. MinGW, Clang Release, Linux arm64 and macOS Release only run on pushes to main
+# and manual runs (workflow_dispatch), which always use the full matrix.
+
 env:
-  VCPKG_ROOT: ${{ github.workspace }}/external/vcpkg
+  # vcpkg binary cache: built dependencies are stored here and persisted between runs with actions/cache
+  VCPKG_BINARY_SOURCES: clear;files,${{ github.workspace }}/.vcpkg-cache,readwrite
 
 jobs:
   # ---------------------- Windows: MSVC + GCC + Clang ----------------------
@@ -26,27 +31,27 @@ jobs:
       matrix:
         toolchain: [ msvc, gcc, clang ]
         config:    [ Debug, Release ]
+        exclude: ${{ fromJSON(github.event_name == 'pull_request' && '[{"toolchain":"gcc"},{"toolchain":"clang","config":"Release"}]' || '[]') }}
 
     steps:
-      - name: Checkout (with submodules)
+      - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Restore vcpkg binary cache
+        uses: actions/cache@v4
         with:
-          submodules: recursive
+          path: .vcpkg-cache
+          key: vcpkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.toolchain }}-${{ hashFiles('vcpkg.json', 'scripts/setup.sh') }}
+          restore-keys: vcpkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.toolchain }}-
 
-      - name: Ensure LF line endings + exec bit
+      - name: Create vcpkg binary cache directory
         shell: bash
-        run: |
-          git config core.autocrlf false
-          chmod +x scripts/*.sh
+        run: mkdir -p .vcpkg-cache
 
+      # clang-cl with Ninja needs the MSVC developer environment (headers, libs, linker)
       - name: Set up MSVC environment
         if: matrix.toolchain != 'gcc'
         uses: ilammy/msvc-dev-cmd@v1
-
-      - name: Install LLVM for clang-cl
-        if: matrix.toolchain == 'clang'
-        shell: bash
-        run: choco install -y llvm --no-progress || true
 
       - name: Remove preinstalled MSYS2 (if present)
         if: matrix.toolchain == 'gcc'
@@ -67,106 +72,75 @@ jobs:
             mingw-w64-x86_64-ninja
             mingw-w64-x86_64-gcc
 
-      - name: Setup (vcpkg etc) — MSVC/Clang
+      - name: Setup, build & test (MSVC / clang-cl)
         if: matrix.toolchain != 'gcc'
         shell: bash
-        run: ./scripts/setup.sh
+        run: |
+          ./scripts/setup.sh
+          ./scripts/build.sh -t ${{ matrix.toolchain }} -c ${{ matrix.config }} --test
 
-      - name: Setup (vcpkg etc) — GCC
+      - name: Setup, build & test (MinGW GCC)
         if: matrix.toolchain == 'gcc'
         shell: msys2 {0}
-        run: ./scripts/setup.sh
-
-      - name: Build — MSVC
-        if: matrix.toolchain == 'msvc'
-        shell: bash
-        run: ./scripts/build.sh -t ${{ matrix.toolchain }} -c ${{ matrix.config }}
-
-      - name: Build — GCC
-        if: matrix.toolchain == 'gcc'
-        shell: msys2 {0}
-        run: ./scripts/build.sh -t ${{ matrix.toolchain }} -c ${{ matrix.config }}
-
-      - name: Build — Clang
-        if: matrix.toolchain == 'clang'
-        shell: bash
-        run: ./scripts/build.sh -t ${{ matrix.toolchain }} -c ${{ matrix.config }}
-
-      - name: Tests — MSVC
-        if: matrix.config == 'Debug' && matrix.toolchain == 'msvc'
-        shell: bash
-        run: ctest --preset win-msvc-tests --output-on-failure
-
-      - name: Tests — GCC
-        if: matrix.config == 'Debug' && matrix.toolchain == 'gcc'
-        shell: msys2 {0}
-        run: ctest --preset win-mingw-gcc-tests --output-on-failure
-
-      - name: Tests — Clang
-        if: matrix.config == 'Debug' && matrix.toolchain == 'clang'
-        shell: bash
-        run: ctest --preset win-clangcl-tests --output-on-failure
+        run: |
+          ./scripts/setup.sh
+          ./scripts/build.sh -t ${{ matrix.toolchain }} -c ${{ matrix.config }} --test
 
       - name: Upload app artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-${{ matrix.toolchain }}-${{ matrix.config }}-windows
-          path: |
-            build/win-msvc/app/${{ matrix.config }}/
-            build/win-mingw-gcc/app/${{ matrix.config }}/
-            build/win-clangcl/app/${{ matrix.config }}/
-          if-no-files-found: ignore
+          path: build/*/app/${{ matrix.config }}/
+          if-no-files-found: error
 
-  # ---------------------- Linux: GCC + Clang ----------------------
+  # ---------------------- Linux: GCC + Clang (x64 + arm64), sanitizers ----------------------
   linux:
-    name: Linux (${{ matrix.toolchain }} | ${{ matrix.config }})
-    runs-on: ubuntu-24.04
+    name: Linux ${{ matrix.os == 'ubuntu-24.04-arm' && 'arm64' || 'x64' }} (${{ matrix.toolchain }} | ${{ matrix.config }})
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os:        [ ubuntu-24.04, ubuntu-24.04-arm ]
         toolchain: [ gcc, clang ]
         config:    [ Debug, Release ]
+        exclude: ${{ fromJSON(github.event_name == 'pull_request' && '[{"os":"ubuntu-24.04-arm"},{"toolchain":"clang","config":"Release"}]' || '[]') }}
+        include:
+          # Clang with AddressSanitizer + UndefinedBehaviorSanitizer (single-config Debug)
+          - os: ubuntu-24.04
+            toolchain: asan
+            config: Debug
     steps:
-      - name: Checkout (with submodules)
+      - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Restore vcpkg binary cache
+        uses: actions/cache@v4
         with:
-          submodules: recursive
+          path: .vcpkg-cache
+          key: vcpkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.toolchain }}-${{ hashFiles('vcpkg.json', 'scripts/setup.sh') }}
+          restore-keys: vcpkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.toolchain }}-
+
+      - name: Create vcpkg binary cache directory
+        run: mkdir -p .vcpkg-cache
 
       - name: Install deps
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential ninja-build cmake clang
 
-      - name: Ensure exec bit
-        run: chmod +x scripts/*.sh
-
       - name: Setup (vcpkg etc)
         run: ./scripts/setup.sh
 
-      - name: Build — GCC
-        if: matrix.toolchain == 'gcc'
-        run: ./scripts/build.sh -t ${{ matrix.toolchain }} -c ${{ matrix.config }}
-
-      - name: Build — Clang
-        if: matrix.toolchain == 'clang'
-        run: ./scripts/build.sh -t ${{ matrix.toolchain }} -c ${{ matrix.config }}
-
-      - name: Tests — GCC
-        if: matrix.config == 'Debug' && matrix.toolchain == 'gcc'
-        run: ctest --preset linux-gcc-tests --output-on-failure
-
-      - name: Tests — Clang
-        if: matrix.config == 'Debug' && matrix.toolchain == 'clang'
-        run: ctest --preset linux-clang-tests --output-on-failure
+      - name: Build & test
+        run: ./scripts/build.sh -t ${{ matrix.toolchain }} -c ${{ matrix.config }} --test
 
       - name: Upload app artifact
+        if: matrix.toolchain != 'asan'
         uses: actions/upload-artifact@v4
         with:
-          name: app-${{ matrix.toolchain }}-${{ matrix.config }}-linux
-          path: |
-            build/linux-gcc/app/${{ matrix.config }}/
-            build/linux-clang/app/${{ matrix.config }}/
-          if-no-files-found: ignore
+          name: app-${{ matrix.toolchain }}-${{ matrix.config }}-linux-${{ runner.arch }}
+          path: build/*/app/${{ matrix.config }}/
+          if-no-files-found: error
 
   # ---------------------- macOS: AppleClang ----------------------
   macos:
@@ -177,35 +151,35 @@ jobs:
       matrix:
         toolchain: [ appleclang ]
         config:    [ Debug, Release ]
+        exclude: ${{ fromJSON(github.event_name == 'pull_request' && '[{"config":"Release"}]' || '[]') }}
     steps:
-      - name: Checkout (with submodules)
+      - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Restore vcpkg binary cache
+        uses: actions/cache@v4
         with:
-          submodules: recursive
+          path: .vcpkg-cache
+          key: vcpkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.toolchain }}-${{ hashFiles('vcpkg.json', 'scripts/setup.sh') }}
+          restore-keys: vcpkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.toolchain }}-
+
+      - name: Create vcpkg binary cache directory
+        run: mkdir -p .vcpkg-cache
 
       - name: Install deps
         run: |
           brew update
           brew install ninja cmake
 
-      - name: Ensure exec bit
-        run: chmod +x scripts/*.sh
-
       - name: Setup (vcpkg etc)
         run: ./scripts/setup.sh
 
-      - name: Build — AppleClang
-        if: matrix.toolchain == 'appleclang'
-        run: ./scripts/build.sh -t ${{ matrix.toolchain }} -c ${{ matrix.config }}
-
-      - name: Tests — AppleClang
-        if: matrix.config == 'Debug' && matrix.toolchain == 'appleclang'
-        run: ctest --preset mac-appleclang-tests --output-on-failure
+      - name: Build & test
+        run: ./scripts/build.sh -t ${{ matrix.toolchain }} -c ${{ matrix.config }} --test
 
       - name: Upload app artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-${{ matrix.toolchain }}-${{ matrix.config }}-macos
-          path: |
-            build/mac-appleclang/app/${{ matrix.config }}/
-          if-no-files-found: ignore
+          path: build/mac-appleclang/app/${{ matrix.config }}/
+          if-no-files-found: error

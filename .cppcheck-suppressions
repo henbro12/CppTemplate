@@ -1,0 +1,7 @@
+// cppcheck suppressions used by the Linter CI (see README, "Running cppcheck")
+
+// Third-party headers from vcpkg
+*:*vcpkg_installed/*
+
+// Unit tests deliberately check values the analyser can already work out
+knownConditionTrueFalse:*tests/*

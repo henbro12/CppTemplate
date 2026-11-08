@@ -53,6 +53,7 @@ vcpkg_installed/
 vcpkg/buildtrees/
 vcpkg/packages/
 vcpkg/downloads/
+.vcpkg-cache/
 
 # OS metadata
 .DS_Store
@@ -60,3 +61,6 @@ Thumbs.db
 
 # External dependencies
 /external/
+
+# Local, per-developer CMake presets
+CMakeUserPresets.json

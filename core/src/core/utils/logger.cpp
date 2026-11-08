@@ -8,7 +8,6 @@
  * @copyright (C) 2025 Henbro12
  * @author Henrico Brom <henricobrom@gmail.com>
  */
-#include "pch.h"
 
 #include "logger.h"
 
@@ -21,9 +20,9 @@ namespace core {
 
 namespace {
 
-constexpr const char* ANSI_WHITE = "\033[37m";
-constexpr const char* ANSI_GREY = "\033[90m";
-constexpr const char* ANSI_RESET = "\033[0m";
+// Colouring is left to spdlog's %^...%$ range: its sinks only emit colour codes when writing to a terminal,
+// and use the right mechanism per platform (ANSI escapes, or console attributes on Windows).
+constexpr const char* LOG_PATTERN = "[%T] [%^%l%$] %n: %v";
 
 // Looks the logger up in the spdlog registry, creating it if needed. Creation is serialised so two
 // threads asking for the same new logger can't both try to register it (spdlog would throw).
@@ -41,7 +40,7 @@ std::shared_ptr<spdlog::logger> getOrCreate(const std::string& name)
 
     // New loggers pick up the registry's global level (see setLogLevel)
     auto logger = spdlog::stdout_color_mt(name);
-    logger->set_pattern("[%T] [%^%l%$] %n: %v");
+    logger->set_pattern(LOG_PATTERN);
     return logger;
 }
 
@@ -50,14 +49,11 @@ std::shared_ptr<spdlog::logger> getOrCreate(const std::string& name)
 void Logger::init()
 {
     // Reconfigures loggers that already exist (e.g. created by logging before init) instead of re-creating them
-    auto configure = [](const std::string& name, const char* color) {
+    for (const char* name : {"Core", "App"}) {
         auto logger = getOrCreate(name);
         logger->set_level(spdlog::level::trace);
-        logger->set_pattern(fmt::format("[%T] [%^%l%$] {}%n: %v{}", color, ANSI_RESET));
-    };
-
-    configure("Core", ANSI_GREY);
-    configure("App", ANSI_WHITE);
+        logger->set_pattern(LOG_PATTERN);
+    }
 
     TEMPLATE_CORE_INFO("Loggers initialized.");
 }
