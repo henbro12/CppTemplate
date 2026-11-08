@@ -8,6 +8,7 @@ add_executable(unit_tests
   test_logger.cpp
   test_profiler.cpp
   test_utils.cpp
+  test_version.cpp
 )
 
 target_link_libraries(unit_tests PRIVATE
@@ -15,11 +16,11 @@ target_link_libraries(unit_tests PRIVATE
   template::core
 )
 
-enable_common_warnings(unit_tests)
+template_configure_target(unit_tests)
 
 target_compile_definitions(unit_tests PRIVATE
-  $<$<CONFIG:Debug>:_DEBUG;DEBUG>
-  $<$<CONFIG:Release>:_RELEASE;RELEASE>
+  TEMPLATE_EXPECTED_PROJECT_NAME="${PROJECT_NAME}"
+  TEMPLATE_EXPECTED_VERSION="${PROJECT_VERSION}"
 )
 
 # Automatically register all TEST_CASEs with CTest

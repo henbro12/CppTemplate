@@ -13,7 +13,7 @@
 
 #include "logger.h"
 
-// Portable debugger break: MSVC/clang-cl, Clang/AppleClang, then POSIX (GCC/MinGW), else abort
+// Portable debugger break: MSVC/clang-cl, Clang/AppleClang, MinGW GCC, then POSIX (GCC), else abort
 #ifdef _MSC_VER
 #define TEMPLATE_DEBUGBREAK() __debugbreak()
 #endif
@@ -22,6 +22,12 @@
 #if __has_builtin(__builtin_debugtrap) && !defined(TEMPLATE_DEBUGBREAK)
 #define TEMPLATE_DEBUGBREAK() __builtin_debugtrap()
 #endif
+#endif
+
+// Windows has no SIGTRAP; mingw-w64 provides the MSVC intrinsic instead
+#if defined(__MINGW32__) && !defined(TEMPLATE_DEBUGBREAK)
+#include <intrin.h>
+#define TEMPLATE_DEBUGBREAK() __debugbreak()
 #endif
 
 #ifndef TEMPLATE_DEBUGBREAK

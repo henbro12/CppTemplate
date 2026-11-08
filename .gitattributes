@@ -1,0 +1,13 @@
+# Normalise line endings: LF in the repository and in every checkout, regardless of core.autocrlf.
+# Shell scripts in particular must stay LF or they break under WSL, containers and plain bash.
+* text=auto eol=lf
+
+# Windows-only scripts keep CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.ico binary

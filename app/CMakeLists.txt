@@ -13,11 +13,10 @@ target_link_libraries(CppTemplateApp PRIVATE
   template::core
 )
 
-enable_common_warnings(CppTemplateApp)
-
-target_compile_definitions(CppTemplateApp PRIVATE
-  $<$<CONFIG:Debug>:_DEBUG;DEBUG>
-  $<$<CONFIG:Release>:_RELEASE;RELEASE>
-)
+template_configure_target(CppTemplateApp)
 
 add_executable(template::app ALIAS CppTemplateApp)
+
+# `cmake --install build/<preset> --config <Config> --prefix <dir>`
+# Dependencies are linked statically on every platform, so the executable is all that needs installing.
+install(TARGETS CppTemplateApp RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

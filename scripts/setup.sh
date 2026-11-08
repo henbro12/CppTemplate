@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Run from the repository root no matter where the script is called from
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+
+# The CMake presets always use this checkout (via its toolchain file), not $VCPKG_ROOT, so builds
+# are reproducible even when another vcpkg is installed (e.g. the one in Visual Studio dev shells).
 VCPKG_DIR="external/vcpkg"
 VCPKG_URL="https://github.com/microsoft/vcpkg.git"
 # Pinned vcpkg release (2026.10.16) so dependency versions are reproducible.
@@ -76,8 +81,7 @@ else
   fi
 fi
 
-export VCPKG_ROOT="$(cd "$VCPKG_DIR" && pwd)"
-echo "[INFO] VCPKG_ROOT set to $VCPKG_ROOT"
+echo "[INFO] vcpkg ready in $(cd "$VCPKG_DIR" && pwd)"
 echo ""
 echo "[SUCCESS] Setup complete."
 echo ""

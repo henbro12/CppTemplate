@@ -75,9 +75,3 @@ BinPackArguments: true
 BinPackParameters: true
 BreakConstructorInitializers: AfterColon
 SpacesBeforeTrailingComments: 1
-
-# Treat certain macros as statements to avoid weird wrapping
-# (available in newer clang-format versions)
-StatementMacros:
-  - DEBUG_LOG
-  - ASSERT

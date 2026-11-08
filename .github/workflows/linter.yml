@@ -1,54 +1,73 @@
 name: Linter
 
 on:
-  push:
   pull_request:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Pinned LLVM version, so formatting and tidy results don't change when the runner image updates.
+  # Same version as build.yml; use it locally too (see docs/code-quality.md) for identical results.
+  LLVM_VERSION: 20
+  VCPKG_BINARY_SOURCES: clear;files,${{ github.workspace }}/.vcpkg-cache,readwrite
 
 jobs:
   lint:
-    name: Lint (clang-tidy & clang-format)
+    name: Lint (clang-format, clang-tidy & cppcheck)
     runs-on: ubuntu-24.04
 
     steps:
-      - name: Checkout (with submodules)
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
-      - name: Install clang-tidy & clang-format
+      - name: Install build tools & cppcheck
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang-tidy clang-format build-essential ninja-build cmake clang
+          sudo apt-get install -y build-essential ninja-build cmake cppcheck
 
-      - name: Ensure exec bit
-        run: chmod +x scripts/*.sh
-
-      - name: Setup (vcpkg etc)
-        run: ./scripts/setup.sh
-        
-      - name: Build project (clang, Debug)
-        run: ./scripts/build.sh -t tidy -c Debug
-
-      - name: Run clang-tidy
-        run: |
-          run-clang-tidy -p build/linux-tidy core app tests
+      - name: Install LLVM ${{ env.LLVM_VERSION }} (clang, clang-tidy, clang-format)
+        run: .github/scripts/install-llvm.sh "$LLVM_VERSION"
 
       - name: Run clang-format (check only)
         run: |
-          clang-format --dry-run --Werror \
-            $(find core app tests \( -name '*.cpp' -o -name '*.h' -o -name '*.hpp' \))
+          clang-format-${LLVM_VERSION} --dry-run --Werror $(git ls-files '*.cpp' '*.h' '*.hpp')
 
-  cppcheck:
-    name: cppcheck
-    runs-on: ubuntu-24.04
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Restore vcpkg binary cache
+        uses: actions/cache@v4
         with:
-          submodules: recursive
+          path: .vcpkg-cache
+          key: vcpkg-${{ runner.os }}-${{ runner.arch }}-tidy-${{ hashFiles('vcpkg.json', 'scripts/setup.sh') }}
+          restore-keys: vcpkg-${{ runner.os }}-${{ runner.arch }}-tidy-
 
+      - name: Create vcpkg binary cache directory
+        run: mkdir -p .vcpkg-cache
+
+      - name: Setup (vcpkg etc)
+        run: ./scripts/setup.sh
+
+      - name: Build project (tidy preset)
+        run: ./scripts/build.sh -t tidy
+
+      - name: Run clang-tidy
+        if: ${{ !cancelled() }}
+        run: |
+          run-clang-tidy-${LLVM_VERSION} -clang-tidy-binary clang-tidy-${LLVM_VERSION} -p build/linux-tidy core app tests
+
+      # Uses the tidy build's compile database, so cppcheck sees the real include paths and defines.
+      # Fails the job on any finding; suppressions live in .cppcheck-suppressions or inline.
       - name: Run cppcheck
-        uses: deep5050/cppcheck-action@a4dcbb4f03f99ac4fbe141dbefd199ff64fc4622 # main as of 2026-10-25
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ !cancelled() }}
+        run: |
+          cppcheck --version
+          cppcheck --project=build/linux-tidy/compile_commands.json \
+            --enable=warning,style,performance,portability \
+            --inline-suppr --suppressions-list=.cppcheck-suppressions \
+            --error-exitcode=1 -q -j "$(nproc)"

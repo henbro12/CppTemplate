@@ -11,11 +11,18 @@
 
 #include <catch2/catch_test_macros.hpp>
 #include <chrono>
+#include <memory>
 #include <stdexcept>
 #include <thread>
+#include <vector>
 
 #include "core/utils/profiler.h"
 
+namespace {
+
+constexpr int MOVE_ONLY_VALUE = 7;
+
+} // namespace
 
 TEST_CASE("Profiler start/end timers", "[profiler]")
 {
@@ -47,6 +54,19 @@ TEST_CASE("Profiler::exprTimer forwards results and exceptions", "[profiler]")
     CHECK_THROWS_AS(Profiler::exprTimer("throws", []() -> int { throw std::runtime_error("boom"); }), std::runtime_error);
 }
 
+TEST_CASE("Profiler::exprTimer keeps references and supports move-only results", "[profiler]")
+{
+    using core::utils::Profiler;
+
+    int target = 1;
+    const int& ref = Profiler::exprTimer("ref", [&]() -> int& { return target; });
+    CHECK(&ref == &target);
+
+    const auto ptr = Profiler::exprTimer("move-only", [] { return std::make_unique<int>(MOVE_ONLY_VALUE); });
+    REQUIRE(ptr != nullptr);
+    CHECK(*ptr == MOVE_ONLY_VALUE);
+}
+
 TEST_CASE("Profiler macros evaluate their expression whether enabled or not", "[profiler]")
 {
     int calls = 0;
@@ -54,11 +74,22 @@ TEST_CASE("Profiler macros evaluate their expression whether enabled or not", "[
         return ++calls;
     };
 
-    CHECK(PROFILE_CALL("macro", f()) == 1);
-    PROFILE_CALL_V("macro_v", f());
+    CHECK(TEMPLATE_PROFILE_CALL("macro", f()) == 1);
+    TEMPLATE_PROFILE_CALL_V("macro_v", f());
     CHECK(calls == 2);
 
+    // Reference results behave the same with the profiler enabled (Debug) and disabled (Release)
+    constexpr int new_value = 20;
+    std::vector<int> values{1, 2, 3};
+    // cppcheck doesn't see that the macro yields a reference into `values`
+    // cppcheck-suppress constStatement
+    TEMPLATE_PROFILE_CALL("element", values[1]) = new_value;
+    CHECK(values[1] == new_value);
+
     {
-        PROFILE_SCOPE("scope");
+        TEMPLATE_PROFILE_SCOPE("scope");
     }
+
+    TEMPLATE_PROFILE_START("macro_timer");
+    TEMPLATE_PROFILE_END("macro_timer");
 }

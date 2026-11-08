@@ -4,82 +4,54 @@ set -euo pipefail
 # Usage:
 #   ./scripts/build.sh [-t TOOLCHAIN] [-c CONFIG] [--test]
 #   TOOLCHAIN (Windows): msvc | gcc | clang | tidy
-#   TOOLCHAIN (Linux)  : gcc  | clang | tidy
-#   TOOLCHAIN (macOS)  : appleclang | tidy
-#   CONFIG: Debug | Release | RelWithDebInfo  (default: Debug)
+#   TOOLCHAIN (Linux)  : gcc  | clang | tidy | asan | coverage
+#   TOOLCHAIN (macOS)  : appleclang | tidy | asan
+#   CONFIG: Debug | Release | RelWithDebInfo  (default: Debug; tidy/asan/coverage are Debug only)
 
-uname_s=$(uname -s || echo "")
-case "$uname_s" in
-  MINGW*|MSYS*|CYGWIN*) HOST_OS="Windows" ;;
-  Darwin*)              HOST_OS="Darwin"  ;;
-  Linux*)               HOST_OS="Linux"   ;;
-  *)                    HOST_OS="$uname_s" ;;
-esac
+SCRIPT_DIR="$(cd -- "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+# shellcheck source=common.sh
+source "$SCRIPT_DIR/common.sh"
+cd "$SCRIPT_DIR/.."
 
-# defaults per OS
-case "$HOST_OS" in
-  Windows) DEFAULT_TOOLCHAIN="msvc" ;;
-  Linux)   DEFAULT_TOOLCHAIN="gcc"  ;;
-  Darwin)  DEFAULT_TOOLCHAIN="appleclang" ;;
-  *)       DEFAULT_TOOLCHAIN="gcc"  ;;
-esac
-
-TOOLCHAIN="$DEFAULT_TOOLCHAIN"
+HOST_OS="$(detect_host_os)"
+TOOLCHAIN="$(default_toolchain "$HOST_OS")"
 CONFIG="Debug"
 RUN_TESTS="false"
 
 # parse flags
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -t|--toolchain) TOOLCHAIN="$2"; shift 2 ;;
-    -c|--config)    CONFIG="$2"; shift 2 ;;
+    -t|--toolchain) require_value "$@"; TOOLCHAIN="$2"; shift 2 ;;
+    -c|--config)    require_value "$@"; CONFIG="$2"; shift 2 ;;
     --test)         RUN_TESTS="true"; shift ;;
     *) echo "[ERROR] Unknown option: $1"; exit 1 ;;
   esac
 done
 
-CONFIGURE_PRESET=""
-TEST_PRESET=""
-
-case "$HOST_OS:$TOOLCHAIN" in
-  Windows:msvc)        CONFIGURE_PRESET="win-msvc";       TEST_PRESET="win-msvc-tests" ;;
-  Windows:gcc)         CONFIGURE_PRESET="win-mingw-gcc";  TEST_PRESET="win-mingw-gcc-tests" ;;
-  Windows:clang)       CONFIGURE_PRESET="win-clangcl";    TEST_PRESET="win-clangcl-tests" ;;
-  Windows:tidy)        CONFIGURE_PRESET="win-tidy";;
-  Linux:gcc)           CONFIGURE_PRESET="linux-gcc";      TEST_PRESET="linux-gcc-tests" ;;
-  Linux:clang)         CONFIGURE_PRESET="linux-clang";    TEST_PRESET="linux-clang-tests" ;;
-  Linux:tidy)          CONFIGURE_PRESET="linux-tidy";;
-  Darwin:appleclang)   CONFIGURE_PRESET="mac-appleclang"; TEST_PRESET="mac-appleclang-tests" ;;
-  Darwin:tidy)         CONFIGURE_PRESET="mac-tidy";;
-  *)
-    echo "[ERROR] Unsupported host/toolchain combo: $HOST_OS / $TOOLCHAIN"
-    exit 1
-    ;;
-esac
+CONFIGURE_PRESET="$(configure_preset_for "$HOST_OS" "$TOOLCHAIN")"
+if [[ -z "$CONFIGURE_PRESET" ]]; then
+  echo "[ERROR] Unsupported host/toolchain combo: $HOST_OS / $TOOLCHAIN"
+  exit 1
+fi
 
 case "$CONFIG" in
   Debug|Release|RelWithDebInfo) ;;
   *) echo "[ERROR] Unsupported config: $CONFIG (expected Debug | Release | RelWithDebInfo)"; exit 1 ;;
 esac
 
-# Tidy presets are single-config Debug builds without tests
-if [[ "$TOOLCHAIN" == "tidy" ]]; then
-  if [[ "$CONFIG" != "Debug" ]]; then
-    echo "[ERROR] The tidy toolchain only supports the Debug config"
-    exit 1
-  fi
-  if [[ "$RUN_TESTS" == "true" ]]; then
-    echo "[ERROR] --test is not supported with the tidy toolchain"
-    exit 1
-  fi
+if is_debug_only_toolchain "$TOOLCHAIN" && [[ "$CONFIG" != "Debug" ]]; then
+  echo "[ERROR] The $TOOLCHAIN toolchain only supports the Debug config"
+  exit 1
 fi
 
-if [[ "$RUN_TESTS" == "true" && "$CONFIG" != "Debug" ]]; then
-  echo "[ERROR] --test is only supported with the Debug config (test presets are Debug-only)"
+# Tidy builds compile the tests (so clang-tidy sees them) but are not meant to be run
+if [[ "$TOOLCHAIN" == "tidy" && "$RUN_TESTS" == "true" ]]; then
+  echo "[ERROR] --test is not supported with the tidy toolchain"
   exit 1
 fi
 
 BUILD_PRESET="${CONFIGURE_PRESET}-${CONFIG}"
+TEST_PRESET="${BUILD_PRESET}-tests"
 
 echo "[INFO] Host OS          : $HOST_OS"
 echo "[INFO] Toolchain        : $TOOLCHAIN"
@@ -94,6 +66,6 @@ echo "[SUCCESS] Build complete."
 
 if [[ "$RUN_TESTS" == "true" ]]; then
   echo "[INFO] Running tests: $TEST_PRESET"
-  ctest --preset "$TEST_PRESET" --output-on-failure
+  ctest --preset "$TEST_PRESET"
   echo "[SUCCESS] Tests complete."
 fi

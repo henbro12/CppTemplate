@@ -5,8 +5,11 @@
  * @brief Simple static profiler to measure named code sections.
  * @date 2025-10-08
  *
- * Lightweight utility for quick performance comparisons. Use Profiler::start("name")
- * and Profiler::end("name") or the RAII helper ScopedTimer.
+ * Lightweight utility for quick performance comparisons. Use Profiler::startTimer("name")
+ * and Profiler::endTimer("name"), the RAII helper ScopedTimer, or the TEMPLATE_PROFILE_* macros.
+ *
+ * @copyright (C) 2025 Henbro12
+ * @author Henrico Brom <henricobrom@gmail.com>
  */
 
 #pragma once
@@ -16,7 +19,6 @@
 #include <mutex>
 #include <string>
 #include <string_view>
-#include <type_traits>
 #include <unordered_map>
 
 #include "core/utils/logger.h"
@@ -27,19 +29,21 @@ class Profiler {
   public:
     using clock = std::chrono::steady_clock;
 
+    // Timers are keyed by name only, so the same name must not be timed concurrently from several threads.
     static void startTimer(std::string_view name);
     static void endTimer(std::string_view name);
     static long long elapsedUs(std::string_view name);
 
+    // Times a call to `f` and returns exactly what `f` returns (values, references and move-only types alike).
     template <class F>
     static decltype(auto) exprTimer(std::string_view name, F&& f);
 
   private:
-    static std::unordered_map<std::string, std::chrono::steady_clock::time_point> s_starts;
+    static std::unordered_map<std::string, clock::time_point> s_starts;
     static std::mutex s_mutex;
 };
 
-// RAII helper
+// RAII helper: logs the time between construction and destruction, noting when the scope was left by an exception.
 class ScopedTimer {
   public:
     explicit ScopedTimer(std::string_view name);
@@ -53,61 +57,39 @@ class ScopedTimer {
 
   private:
     std::string m_name;
-    std::chrono::steady_clock::time_point m_start;
+    Profiler::clock::time_point m_start;
+    int m_uncaught_exceptions;
 };
 
 // Template implementation
 template <class F>
 decltype(auto) Profiler::exprTimer(std::string_view name, F&& f)
 {
-    const auto start = clock::now();
-    try {
-        if constexpr (std::is_void_v<std::invoke_result_t<F&&>>) {
-            std::invoke(std::forward<F>(f));
-            const auto us = std::chrono::duration_cast<std::chrono::microseconds>(clock::now() - start).count();
-            TEMPLATE_CORE_TRACE("Profiler '{}' took {} us", name, us);
-            return;
-        }
-        else {
-            auto ret = std::invoke(std::forward<F>(f));
-            const auto us = std::chrono::duration_cast<std::chrono::microseconds>(clock::now() - start).count();
-            TEMPLATE_CORE_TRACE("Profiler '{}' took {} us", name, us);
-            return ret;
-        }
-    }
-    catch (...) {
-        const auto us = std::chrono::duration_cast<std::chrono::microseconds>(clock::now() - start).count();
-        TEMPLATE_CORE_TRACE("Profiler '{}' threw after {} us", name, us);
-        throw;
-    }
+    // The timer logs when it goes out of scope, after the result has been produced, so the
+    // result can be returned directly and keeps its exact type and value category.
+    const ScopedTimer timer{name};
+    return std::invoke(std::forward<F>(f));
 }
 
 } // namespace core::utils
 
-// Convenience macros: enable by defining ENABLE_PROFILER (e.g., in Debug builds)
-#ifndef ENABLE_PROFILER
-#if defined(_DEBUG) || (defined(DEBUG) && DEBUG)
-#define ENABLE_PROFILER 1
-#else
-#define ENABLE_PROFILER 0
-#endif
-#endif
+// Convenience macros, enabled when TEMPLATE_ENABLE_PROFILER is defined. template::core defines it for Debug
+// builds of everything that links it; define it yourself to profile other configurations.
+#ifdef TEMPLATE_ENABLE_PROFILER
+#define TEMPLATE_PROFILE_START(name) ::core::utils::Profiler::startTimer(name)
+#define TEMPLATE_PROFILE_END(name) ::core::utils::Profiler::endTimer(name)
+#define TEMPLATE_PROFILE_CALL(name, expr) ::core::utils::Profiler::exprTimer((name), [&]() -> decltype(expr) { return (expr); })
+#define TEMPLATE_PROFILE_CALL_V(name, expr) ::core::utils::Profiler::exprTimer((name), [&]() { (expr); })
+#define TEMPLATE_PROFILE_SCOPE(name) const ::core::utils::ScopedTimer TEMPLATE_PROFILE_CONCAT(template_scope_timer_, __LINE__)(name)
 
-#if ENABLE_PROFILER
-#define PROFILE_START(name) ::core::utils::Profiler::startTimer(name)
-#define PROFILE_END(name) ::core::utils::Profiler::endTimer(name)
-#define PROFILE_CALL(name, expr) ::core::utils::Profiler::exprTimer((name), [&]() -> decltype(expr) { return (expr); })
-#define PROFILE_CALL_V(name, expr) ::core::utils::Profiler::exprTimer((name), [&]() { (expr); })
-#define PROFILE_SCOPE(name) ::core::utils::ScopedTimer CONCAT_SCOPE_TIMER(__LINE__)(name)
-
-// helper to generate unique variable names for the scope timer
-#define CONCAT_SCOPE_TIMER_INTERNAL(line) scope_timer_##line
-#define CONCAT_SCOPE_TIMER(line) CONCAT_SCOPE_TIMER_INTERNAL(line)
+// Helpers to generate a unique variable name for the scope timer
+#define TEMPLATE_PROFILE_CONCAT_INNER(a, b) a##b
+#define TEMPLATE_PROFILE_CONCAT(a, b) TEMPLATE_PROFILE_CONCAT_INNER(a, b)
 #else
-// Disabled variants keep the same signatures, and PROFILE_CALL/PROFILE_CALL_V still evaluate `expr`
-#define PROFILE_START(name) ((void)0)
-#define PROFILE_END(name) ((void)0)
-#define PROFILE_CALL(name, expr) (expr)
-#define PROFILE_CALL_V(name, expr) ((void)(expr))
-#define PROFILE_SCOPE(name) ((void)0)
+// Disabled variants keep the same signatures, and TEMPLATE_PROFILE_CALL/_CALL_V still evaluate `expr`
+#define TEMPLATE_PROFILE_START(name) ((void)0)
+#define TEMPLATE_PROFILE_END(name) ((void)0)
+#define TEMPLATE_PROFILE_CALL(name, expr) (expr)
+#define TEMPLATE_PROFILE_CALL_V(name, expr) ((void)(expr))
+#define TEMPLATE_PROFILE_SCOPE(name) ((void)0)
 #endif

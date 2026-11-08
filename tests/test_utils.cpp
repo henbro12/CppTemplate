@@ -36,7 +36,19 @@ TEST_CASE("Assert macros compile and pass on true conditions", "[utils]")
         TEMPLATE_ASSERT(false, TEMPLATE_CORE_ERROR, "unreachable");
     // NOLINTEND(readability-braces-around-statements)
 
+    int verifications = 0;
+    TEMPLATE_VERIFY(++verifications == 1, TEMPLATE_CORE_ERROR, "evaluated {} times", verifications);
+    CHECK(verifications == 1);
+}
+
+TEST_CASE("TEMPLATE_ASSERT only evaluates its condition when asserts are enabled", "[utils]")
+{
     int evaluations = 0;
-    TEMPLATE_VERIFY(++evaluations == 1, TEMPLATE_CORE_ERROR, "evaluated {} times", evaluations);
+    TEMPLATE_ASSERT(++evaluations > 0, TEMPLATE_CORE_ERROR, "evaluated {} times", evaluations);
+
+#ifdef TEMPLATE_ENABLE_ASSERTS
     CHECK(evaluations == 1);
+#else
+    CHECK(evaluations == 0);
+#endif
 }
